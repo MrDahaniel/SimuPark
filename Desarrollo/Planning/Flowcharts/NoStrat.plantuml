@@ -1,0 +1,24 @@
+@startuml NoStrat
+
+    skinparam style strictuml
+    skinparam defaultTextAlignment center
+
+    title Diagrama de Flujo:\nConducta de las Personas Caso Base y Tiempos Falsos
+
+    start 
+        :Persona ingresa al parque;
+        repeat :Persona entra al centro;
+            if (Persona elije si desea realizar una actividad o\nhacer una fila para una atracción) then (Atracción)
+                    :Gira la ruleta para realizar\nla selección de que atracción\nse va revisar;
+                    if (¿El tiempo de espera es menor que el\nmáximo tiempo de espera?) then (Sí)
+                        :La persona se una a fila normal;
+                    else (No)
+                    endif
+            else (Actividad)
+                        :Se gira la ruleta para\nseleccionar la actividad;
+            endif
+        repeat while (¿Hora de irse?) is (No) 
+        -> Sí;
+    stop
+
+@enduml

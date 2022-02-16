@@ -1,0 +1,99 @@
+@startuml parkClassDiagram
+
+     title \nSimuPark: Class Diagram\n
+
+     ' skinparam style strictuml
+     skinparam defaultTextAlignment center
+
+     ' Class Declaration
+     class Person {
+          ' Variables
+          +id: int
+          +name: str
+          +attractionsExperienced: int
+          +totalWaitTime: int
+          +arrivalTime: int
+          +departureTime: int
+          +timeLeftInActivity: int
+          +currentActivity: str
+          +archetype: str
+          +bulkTime: int
+          +attractionChance: float
+          +thingsDone: list[str]
+
+
+          ' Methods
+          +doActivity(self, name: str, duration: int)
+          +rideAttraction(self, name: str, duration: int)
+          +chooseWhatToDo(self, activities: list[Activity], attraction: list[Attraction])
+          +flipCoin(self, Park: Park): list[Activity]
+          +spinRoulette(self, locations: list[Activity]): Activity
+          +checkAttraction(self, Activity): None
+          +joinQueue(self, Activity): None
+          +leavePark(self): None
+     }
+
+     class Archetype {
+          ' Variables
+          +name: str
+          +maxWaitTime: int
+          +minWaitTime: int
+          +maxStay: int
+          +minStay: int
+          +attractionChance: float
+
+          ' Methods
+
+     }
+
+     class Activity {
+          ' Variables
+          +name: str
+          +duration: int
+
+     }
+
+     class Attraction {
+          ' Variables
+          +popularity: int
+          +hourlyServiceRate: int
+          +fakeWaitTime: int
+          ' Methods
+          
+          +updateWaitTime(self)
+          +updateFakeWaitTime(self)
+     }
+
+     class Park {
+          ' Variables
+          +name: str
+          +time: int
+          +closingTime: int
+          +visitors: list[People]
+          +attractions: list[Attraction]
+          +activities: list[Activity]
+
+          ' Methods
+          +startDay(self, totalVisitors: int)
+          +receiveVisitors(self)
+     }
+
+     class Queue {
+          ' Variables
+          +type: str
+          +waitTime: int
+          +inQueue: list[Person]
+
+          ' Methods
+          +serve(self, nPeople: int)
+          +addToQueue(self, person: Person)
+     }
+
+     ' Relationships
+     Park *.right. Activity : Park has \nmany Activities
+     Activity <|-- Attraction : Attractions are \nactivities with a queue
+     Person -left-  Activity : A Person \ndoes activities
+     Person -- Archetype : Person is defined by \nan Archetype
+     Attraction *-left- Queue : An attraction\n has queues
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml FastPass
+
+    skinparam style strictuml
+    skinparam defaultTextAlignment center
+
+    title Diagrama de Flujo:\nConducta de las Personas con FastPass
+
+    start 
+        :Persona ingresa al parque;
+        repeat :Persona entra al centro;
+            if (¿Se está en el intervalo del FastPass que se tiene?) then (No)
+                if (Persona elije si desea realizar una actividad o\nhacer una fila para una atracción) then (Atracción)
+                    :Gira la ruleta para realizar\nla selección de que atracción\nse va revisar;
+                    if (Tiempo Espera < 30) then (Sí)
+                        :Se une directamente a la fila;
+                    else (No)
+                        if (¿Hay FastPass disponible antes de\nla hora del partida del parque?) then (Sí)
+                            :Se toma un turno de FastPass;
+                        else (No)
+                            if (¿El tiempo de espera es menor\nal del turno de FastPass?) then (Sí)
+                                if (¿El tiempo de espera es menor\nal máximo tiempo de espera?) then (Sí)
+                                    :La persona se une a la fila a\nesperar su turno;
+                                else (No)
+                                    
+                                endif
+                            else (No)    
+                            endif
+                        endif
+                    endif
+                else (Actividad)
+                    :Se gira la ruleta para\nseleccionar la actividad;
+                    if (El tiempo de la actividad es inferior\nal tiempo del siguiente FastPass?) then (Sí)
+                        :La persona realiza la actividad;
+                    else (No)
+                    endif
+                endif    
+            else (Sí)
+                :Ir a la atracción de la cual se tiene\nturno con FastPass;
+            endif
+        repeat while (¿Hora de irse?) is (No) 
+        -> Sí;
+        stop
+
+
+@enduml
