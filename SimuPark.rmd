@@ -1,0 +1,124 @@
+# Simupark: Simulando Un Parque De Diversiones
+
+## Introducción
+
+## Desarrollo
+
+### Planteando El Modelo
+
+### Recolectando Y Procesando Datos
+
+Una de las partes más importantes en cuanto se refiere a la construcción de nuestro modelo de simulación, está en la recolección de los datos necesarios para poder estar lo más cerca a el comportamiento real. En este caso, esto no es la excepción. 
+
+Para poder realizar el modelado de las diferentes componentes del parque de diversiones de nuestra simulación, requeríamos conocer, o por lo menos aproximar, 3 parámetros los cuales afectan de gran medida los resultados finales. La función de llegada de los visitantes al parque, la cual determina la cantidad de personas que llegan a parque dependiendo la hora del día; los arquetipos de las personas, los cuales determinan el comportamiento de las personas ya en el parque; y las principales caracterísitcas de las atracciones, principalmente la tasa de servicio y la popularidad de las mismas. Siendo así, se llevaron acabo diferentes procedimientos para la determinación de estos parámetros.
+
+#### Determinando La Función De Entrada Al Parque
+
+La principal necesidad de determinar la función que describa el comportamiento de la entrada de las personas al parque, está en el como este afecta los tiempos de espera de manera general dentro del parque.
+
+!!!! Expandir esto, me quedé sin ideas. Me estaba doliendo la cabeza !!!!
+
+Lo primero a realizar es cargar nuestro dataset. Como tal, este dataset fue recolectado de diferentes páginas web las cuales indicaban una especie de nivel de "llenura". Aunque se han de reconocer las limitaciones de la información que verdaramente provee, debido a la escacez de los datos que hay sobre las tasas de entrada en muchos de los parques, es lo más cercano que se tiene a un reporte de la manera en la que las personas visitan el parque.
+
+```{r}
+# entryDF <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/crowdLevels.csv")
+entryDF <- read.table("./datasets/crowdLevels.csv", header = T)
+
+knitr::kable(head(entryDF))
+```
+
+Eliminamos la fila del nombre del parque.
+
+```{r, message=FALSE}
+entryDF <- entryDF[, 2:18]
+
+library(reshape2)
+entryDF <- melt(entryDF)
+entryDF$variable <- as.numeric(sub("X", "", entryDF$variable)) - 8
+```
+
+```{r}
+plot(entryDF)
+```
+
+```{r}
+lm_model <- lm(formula = value ~ poly(variable, 5, raw = TRUE), data = entryDF)
+lm_model
+```
+
+```{r}
+model_fn <- function(x, coef) {
+    y <- 0
+    dg <- 0
+    for (co in coef) {
+        y <- y + (co * (x**dg))
+        dg <- dg + 1
+    }
+    return(y)
+}
+
+print_model <- function(coef) {
+    y <- "0"
+    dg <- 0
+    for (co in coef) {
+        y <- paste(y, "+", co, "* (x **", dg, ")")
+        dg <- dg + 1
+    }
+    print(y)
+}
+```
+
+```{r, echo=FALSE, fig.align='center'}
+plot(entryDF)
+curve(model_fn(x, lm_model$coefficients), from = 0, to = 16, add = TRUE)
+```
+
+```{r}
+print_model(lm_model$coefficients)
+```
+
+#### Definiendo Los Arquetipos De Los Visitantes
+
+Carguemos nuestro dataset relacionado con las respuestas recolectadas.
+
+```{r}
+# formsDF = read.csv()
+formsDF <- read.csv("./datasets/formResponses.csv")[2:10]
+knitr::kable(head(formsDF))
+```
+
+Ya con estos datos disponibles, debemos determinar 3 componentes princiaples para poder definir cada uno de los arquetipos de los visitantes al parque. El primero de estos está en la preferencia de realizar una actividad sobre una atracción. En este sentido, tendremos que basarnos sobre las respuestas relacionadas con los gustos de las personas.
+
+##### Probabilidad De Atracciones Sobre Actividades
+
+```{r}
+preferenceDF <- formsDF[1:5]
+knitr::kable(head(preferenceDF))
+```
+
+Lo primero que vamos a hacer con el fin de definir los porcentajes de preferencia de las personas estará en promediar el valor de cada una de las actividades. De esta manera, tendremos el valor general de que estos realicen una activiadad. 
+
+```{r}
+preferenceDF$PromAct <- rowMeans(preferenceDF[, c(1, 2, 4, 5)])
+knitr::kable(head(preferenceDF))
+```
+
+Partiendo de esto, sólo queda sacar la fracción entre el valor de la atracción sobre la suma del puntaje promedio de las activiades con el puntaje de la atracción para tener un aproximado de las preferencias de las personas.
+
+```{r}
+# preferenceDF$ProbAttr <- (preferenceDF[, 3]) / (preferenceDF[, 3] + preferenceDF[, 6] * 2)
+# preferenceDF$ProbAttr <- (preferenceDF[, 3]) / (sum(preferenceDF[, c(1, 2, 4, 5)]))
+preferenceDF$ProbAttr <- (preferenceDF[, 3]) / (preferenceDF[, 3] + preferenceDF[, 6])
+# knitr::kable(head(preferenceDF))
+preferenceDF
+```
+
+#### La Popularidad Y La Tasa De Servicio De Las Atracciones
+
+### Implementación De La Simulación
+
+### Simulando El Parque
+
+### Análisis De Los Resultados
+
+## Conclusiones

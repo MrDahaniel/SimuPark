@@ -84,9 +84,9 @@ class Park:
         attrDict: dict[str, dict] = ATTRACTIONS,
         activitiesDict: dict[str, dict] = ACTIVITIES,
         archetypeDict: dict[str, dict] = ARCHETYPES,
-        function: Callable = lambda x, k: np.power(k, x) * np.exp(-k) / gamma(x + 1),
+        fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
         altQ: str = None,
-        hoursOpen: int = 11,
+        hoursOpen: int = 16,
     ) -> None:
         self.currentTime: int = 0
         self.closingTime: int = 60 * hoursOpen
@@ -94,14 +94,14 @@ class Park:
         self.activities: list[Activity] = self._handleActivities(activitiesDict)
         self.guestArchetypes: list[Archetype] = self._handleArchetypes(archetypeDict)
         self.guests: list[Person] = []
-        self.function: Callable[[int], float] = function
+        self.function: Callable[[float], float] = fn
 
     def startDayBase(self, totalGuests: int) -> None:
         # Day starts, time starts running minute pero minute depending in the
         # hours open
         for minute in range(self.closingTime):
             # ✌Every minute, the park receives guests
-            self._receiveGuests(totalGuests=totalGuests, time=minute)
+            self._receiveGuests2(totalGuests=totalGuests, time=minute)
 
             # Every 5 minutes, all queue times update for the guests to check
             if minute % 5 == 0:
@@ -214,6 +214,25 @@ class Park:
                 archetype: Archetype = choice(self.guestArchetypes)
                 newGuest: Person = Person(len(self.guests), time, archetype)
                 self.guests.append(newGuest)
+
+    def _receiveGuests2(self, totalGuests: int, time: int) -> None:
+        # This function is executed everytime a minute passes
+        # It handles the creation of each person that visits the park
+        randNum = np.random.uniform(low=0.4, high=0.5)
+        nGuests = int(
+            np.floor(
+                (totalGuests / self.closingTime)
+                * randNum
+                * float(self.function(time / 60, 3))
+                * 10
+            )
+        )
+
+        # if randNum <= float(self.function(time / 60, 3)):
+        for _i in range(nGuests):
+            archetype: Archetype = choice(self.guestArchetypes)
+            newGuest: Person = Person(len(self.guests), time, archetype)
+            self.guests.append(newGuest)
 
     def _updateWaitTimes(self):
         for attraction in self.attractions:
