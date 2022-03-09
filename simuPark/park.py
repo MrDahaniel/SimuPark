@@ -107,7 +107,7 @@ class Park:
         attraction_dict: dict[str, dict] = ATTRACTIONS,
         activities_dict: dict[str, dict] = ACTIVITIES,
         archetype_dict: dict[str, dict] = ARCHETYPES,
-        fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
+        fn: Callable[[float], float] = lambda x, k: k**x * np.exp(-k) / gamma(x + 1),
         alt_queue: str = None,
         hours_open: int = 16,
     ) -> None:
@@ -121,7 +121,7 @@ class Park:
         self.guests: list[Person] = []
         self.function: Callable[[float], float] = fn
 
-    def start_day(self, max_entry_rate: int) -> None:
+    def start_day(self, max_entry_rate: int, wait_time_update: int) -> None:
         # First, we create the guests
 
         self._generate_entry_events(max_entry_rate, self.closing_time)
@@ -130,7 +130,7 @@ class Park:
         # hours open
         for minute in tqdm(range(self.closing_time)):
             # Every 5 minutes, all queue times update for the guests to check
-            if minute % 5 == 0:
+            if minute % wait_time_update == 0:
                 self._update_wait_times()
 
             for guest in self.guests:
