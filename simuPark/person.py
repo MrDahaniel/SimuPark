@@ -26,7 +26,13 @@ class Archetype:
 
 
 class Person:
-    def __init__(self, id: int, arrivalTime: int, archetype: Archetype) -> None:
+    def __init__(
+        self,
+        id: int,
+        arrivalTime: int,
+        archetype: Archetype,
+        parkClosingTime: int = None,
+    ) -> None:
         # General info
         self.id: str = id
         self.timeLeftInActivity: int = 0
@@ -46,25 +52,23 @@ class Person:
         self.maxWait: int = randint(archetype.minWaitTime, archetype.maxWaitTime)
         self.attractionChance: float = archetype.attractionChance
 
-        # !!! DELETE LATER !!!
-        self.choicesMade: int = 0
+        # Handle time after park closes
+        if parkClosingTime is not None and parkClosingTime < self.departureTime:
+            self.departureTime = parkClosingTime
 
     # General functions, used in all scenarios
 
     def report(self):
         return f"id: {self.id}  arvTime: {self.arrivalTime} thingsDone: {self.thingsDone} attrExp: {self.attractionsExperienced} "
 
-    # Person does an activity, it gets set to idle while doing so
     def doActivity(self, name: str, duration: int):
+        # Person does an activity, it gets set to idle while doing so
         self.currentActivity = name
         self.timeLeftInActivity = duration
 
-        # !!!!!!!!!!!!! DELETE LATER !!!!!!!!!!!!!!!!!!
-        self.thingsDone.append(name)
-
-    # Person rides an attraction, it adds the activity done to the list
-    # and sets it to idle for the duration of the ride
     def rideAttraction(self, name: str, duration: int):
+        # Person rides an attraction, it adds the activity done to the list
+        # and sets it to idle for the duration of the ride
         self.thingsDone.append(name)
         self.currentActivity = name
         self.attractionsExperienced += 1
@@ -121,6 +125,7 @@ class Person:
             self.departureTime = time
 
     # Disney FastPass specific
+
     def checkAttractionFP(self, attraction: Attraction):
         # First, we check the wait time for the attraction
         # if the wait time is less than 30 minutes, person will join

@@ -33,6 +33,19 @@ class Queue:
         self.waitTime = newWaitTime
 
 
+class FastPassMachine:
+    def __init__(
+        self, attractionServiceRate: int, timeOpen: int, fastpassSize: float = 0.3
+    ) -> None:
+        self.totalFastPass = attractionServiceRate * timeOpen * fastpassSize
+
+    def _generateFastPass(self) -> None:
+        pass
+
+    def _supplyFastPass(self) -> tuple(str, int):
+        pass
+
+
 class Activity:
     def __init__(self, name: str, popularity: int, duration: int) -> None:
         self.name: str = name
@@ -53,8 +66,12 @@ class Attraction(Activity):
         self.serviceRate: int = serviceRate
         self.fakeWaitTime: int = 0
         self.queue: Queue = Queue()
+
         if altQueue in ["DFP", "SFP"]:
             self.altQueue: Queue = Queue(type=altQueue)
+
+            if altQueue == "DFP":
+                self.fast_pass_machine: FastPassMachine = FastPassMachine(serviceRate)
 
     def serve(self):
         # We calculate the amount of people the attraction can serve each minute
@@ -97,18 +114,23 @@ class Park:
         self.guests: list[Person] = []
         self.function: Callable[[float], float] = fn
 
-    def startDayBase(self, maxEntryRate: int) -> None:
-        # Day starts, time starts running minute pero minute depending in the
+    def startDay(self, maxEntryRate: int) -> None:
+        # First, we create the guests
+
+        self._generateEntryEvents(maxEntryRate)
+
+        # Day starts, time starts running minute per minute depending in the
         # hours open
         for minute in tqdm(range(self.closingTime)):
-            # ✌Every minute, the park receives guests
-            self._receiveGuests2(totalGuests=maxEntryRate, time=minute)
-
             # Every 5 minutes, all queue times update for the guests to check
             if minute % 5 == 0:
                 self._updateWaitTimes()
 
             for guest in self.guests:
+                # Guest hasn't arrived to the park yet
+                if guest.arrivalTime > minute:
+                    continue
+
                 # print(f"Guest id : {guest.id}")
                 guest.checkLeavePark(minute)
                 # This case is the 'left the park' state, they're skipped
@@ -146,23 +168,18 @@ class Park:
 
             self._serveGuests()
 
-    def startDayBaseAlt(self, maxEntryRate: int) -> None:
-        # First, we create the guests
-
-        self._generateEntryEvents(maxEntryRate)
-
-        # Day starts, time starts running minute per minute depending in the
+    def startDayBaseOld(self, maxEntryRate: int) -> None:
+        # Day starts, time starts running minute pero minute depending in the
         # hours open
         for minute in tqdm(range(self.closingTime)):
+            # ✌Every minute, the park receives guests
+            self._receiveGuests2(totalGuests=maxEntryRate, time=minute)
+
             # Every 5 minutes, all queue times update for the guests to check
             if minute % 5 == 0:
                 self._updateWaitTimes()
 
             for guest in self.guests:
-                # Guest hasn't arrived to the park yet
-                if guest.arrivalTime > minute:
-                    continue
-
                 # print(f"Guest id : {guest.id}")
                 guest.checkLeavePark(minute)
                 # This case is the 'left the park' state, they're skipped
