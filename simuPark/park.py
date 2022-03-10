@@ -5,6 +5,7 @@ from simuPark.person import Person, Archetype
 from simuPark.constants import ACTIVITIES, ARCHETYPES, ATTRACTIONS
 from tqdm import tqdm
 import numpy as np
+from warnings import warn
 
 
 class Queue:
@@ -107,7 +108,7 @@ class Park:
         attraction_dict: dict[str, dict] = ATTRACTIONS,
         activities_dict: dict[str, dict] = ACTIVITIES,
         archetype_dict: dict[str, dict] = ARCHETYPES,
-        fn: Callable[[float], float] = lambda x, k: k**x * np.exp(-k) / gamma(x + 1),
+        fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
         alt_queue: str = None,
         hours_open: int = 16,
     ) -> None:
@@ -121,7 +122,7 @@ class Park:
         self.guests: list[Person] = []
         self.function: Callable[[float], float] = fn
 
-    def start_day(self, max_entry_rate: int, wait_time_update: int) -> None:
+    def start_day(self, max_entry_rate: int, wait_time_update: int = 5) -> None:
         # First, we create the guests
 
         self._generate_entry_events(max_entry_rate, self.closing_time)
@@ -165,55 +166,6 @@ class Park:
                         self.attractions,
                     )
 
-                    if isinstance(selection, Attraction):
-                        guest.check_attraction(selection)
-                        # guest.do_activity(selection.name, selection.duration)
-                        # print("Chose attraction")
-                    elif isinstance(selection, Activity):
-                        # print("Chose activity")
-                        guest.do_activity(selection.name, selection.duration)
-
-                # print("")
-
-            self._serve_guests()
-
-    def start_day_base_old(self, max_entry_rate: int) -> None:
-        # Day starts, time starts running minute pero minute depending in the
-        # hours open
-        for minute in tqdm(range(self.closing_time)):
-            # Every minute, the park receives guests
-            self._receive_guests_2(total_guests=max_entry_rate, time=minute)
-
-            # Every 5 minutes, all queue times update for the guests to check
-            if minute % 5 == 0:
-                self._update_wait_times()
-
-            for guest in self.guests:
-                # print(f"Guest id : {guest.id}")
-                guest.check_leave_park(minute)
-                # This case is the 'left the park' state, they're skipped
-                if guest.time_left_in_activity == -2:
-                    # print("left park")
-                    continue
-
-                # In this case, the guest is in a queue, they're are skipped
-                # as they're not able to change selections. TotalWaitTime increases.
-                elif guest.time_left_in_activity == -1:
-                    # print("On queue")
-                    guest.total_wait_time += 1
-
-                # On this case, the guest is currently doing an activity
-                # or riding an attraction. Time passes.
-                elif guest.time_left_in_activity > 0:
-                    # print("Doing activity")
-                    guest.time_left_in_activity -= 1
-
-                # In this scenario, they're looking for something to do
-                # They're free to choose based on their archetype
-                elif guest.time_left_in_activity == 0:
-                    selection = guest.choose_what_to_do(
-                        self.activities, self.attractions
-                    )
                     if isinstance(selection, Attraction):
                         guest.check_attraction(selection)
                         # guest.do_activity(selection.name, selection.duration)
@@ -283,37 +235,6 @@ class Park:
             attraction_list.append(attraction)
 
         return attraction_list
-
-    def _receive_guests(self, total_guests: int, time: int) -> None:
-        # This function is executed everytime a minute passes
-        # It handles the creation of each person that visits the park
-        rand_num = np.random.uniform(low=0, high=1)
-        n_guests = int(np.floor(total_guests / self.closing_time))
-
-        if rand_num <= float(self.function(time / 60, 3)):
-            for _i in range(n_guests):
-                archetype: Archetype = choice(self.guest_archetypes)
-                new_guest: Person = Person(len(self.guests), time, archetype)
-                self.guests.append(new_guest)
-
-    def _receive_guests_2(self, total_guests: int, time: int) -> None:
-        # This function is executed everytime a minute passes
-        # It handles the creation of each person that visits the park
-        rand_num = np.random.uniform(low=0.4, high=0.5)
-        n_guests = int(
-            np.floor(
-                (total_guests / self.closing_time)
-                * rand_num
-                * float(self.function(time / 60, 3))
-                * 10
-            )
-        )
-
-        # if rand_num <= float(self.function(time / 60, 3)):
-        for _i in range(n_guests):
-            archetype: Archetype = choice(self.guest_archetypes)
-            new_guest: Person = Person(len(self.guests), time, archetype)
-            self.guests.append(new_guest)
 
     def _generate_entry_events(
         self, max_entry_rate: int, park_closing_time: int
