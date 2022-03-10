@@ -32,6 +32,7 @@ class Person:
         arrival_time: int,
         archetype: Archetype,
         park_closing_time: int = None,
+        scenario: str = "NORMAL",
     ) -> None:
         # General info
         self.id: str = id
@@ -55,6 +56,13 @@ class Person:
         # Handle time after park closes
         if park_closing_time is not None and park_closing_time < self.departure_time:
             self.departure_time = park_closing_time
+
+        # Used in SFP and DFP}
+        if scenario == "DFP":
+            self.fastpass: Union[bool, tuple[str, int], None] = None
+        elif scenario == "SFP":
+            # Ola, implementar cosas aquí uwu
+            pass
 
     # General functions, used in all scenarios
 
@@ -90,12 +98,18 @@ class Person:
         return random.uniform(low=0, high=1) < self.attraction_chance
 
     def spin_roulette(
-        self, options: list[Union[Activity, Attraction]]
+        self,
+        options: list[Union[Activity, Attraction]],
     ) -> Union[Activity, Attraction]:
+        # We get the sum of all popularity points in the park
         total_popularity: int = sum([activity.popularity for activity in options])
+
+        # And we calculate the popularity of each of the attractions
         weighed_popularity: list[float] = [
             activity.popularity / total_popularity for activity in options
         ]
+
+        # Finally the person makes a choice of what they want to do
         return choices(population=options, weights=weighed_popularity, k=1)[0]
 
     def check_attraction(self, attraction: Attraction):
@@ -127,9 +141,25 @@ class Person:
 
     def check_attraction_fastpass(self, attraction: Attraction):
         # First, we check the wait time for the attraction
-        # if the wait time is less than 30 minutes, person will join
-        if attraction.queue.wait_time <= 30:
+        # if the wait time is less than 30 minutes, and lower than
+        # their max wait time, they will join the normal queue
+        if 1:
+            pass
+        elif (
+            attraction.queue.wait_time <= 30
+            and attraction.queue.wait_time <= self.max_wait
+        ):
             # We set the time_left_in_activity to -1 to identify as the person
             # is waiting on queue
             self.time_left_in_activity = -1
             attraction.add_to_queue(self, "NORMAL")
+
+        # In this case, the wait time is too long, person checks for fastpass
+        else:
+            # We tell the attraction fastpass machine to give the person a FP ticker
+            fp: tuple = attraction.fast_pass_machine._handout_fastpass()
+
+            # If the return is negative, it means we got no fastpass available
+            # Person goes back to the "wat do" pool
+            if fp is not None:
+                self.fastpass = fp

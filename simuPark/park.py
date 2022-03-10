@@ -37,17 +37,38 @@ class Queue:
 class FastPassMachine:
     def __init__(
         self,
-        attraction_service_rate: int,
-        time_open: int,
+        attraction_name: str,
+        service_rate: int,
+        hours_open: int,
         fastpass_pool_size: float = 0.3,
     ) -> None:
-        self.totalFastPass = attraction_service_rate * time_open * fastpass_pool_size
+        self.attraction: str = attraction_name
+        self.fastpass_pool: int = [
+            int(service_rate * fastpass_pool_size / 4)
+            for _hour in range(hours_open * 4)
+        ]
+        self.quarter_handouts: int = [0 for _hour in range(hours_open * 4)]
 
-    def _generate_fastpass(self) -> None:
-        pass
+    def _handout_fastpass(self, person: Person, time: int) -> None:
+        # We calculate the current hour and the minimun return window
+        current_quarter: int = int(np.floor(time / 15))
+        min_fastpass_quarter = current_quarter + 4
 
-    def _supply_fastpass(self) -> tuple[str, int]:
-        pass
+        # first we check if the person currently has a fastpass ticket
+        if person.fastpass is None:
+            try:
+                for quarter in range(min_fastpass_quarter, len(self.fastpass_pool) - 1):
+                    # if not, the person gets a fast pass with at least an hour return time
+                    if self.quarter_handouts[quarter] < self.fastpass_pool[quarter]:
+                        person.fastpass = (
+                            self.attraction,
+                            int(quarter * 15 + np.random.uniform(1, 15)),
+                        )
+                        self.quarter_handouts[quarter] += 1
+
+            # if out of bounds, all fastpass for the day have been supplied
+            except IndexError:
+                return None
 
 
 class Activity:
@@ -65,6 +86,8 @@ class Attraction(Activity):
         duration: int,
         service_rate: int,
         alt_queue: str = None,
+        hours_open: int = 16,
+        fastpass_pool_size: float = 0.3,
     ) -> None:
         super().__init__(name, popularity, duration)
         self.service_rate: int = service_rate
@@ -75,7 +98,12 @@ class Attraction(Activity):
             self.alt_queue: Queue = Queue(type=alt_queue)
 
             if alt_queue == "DFP":
-                self.fast_pass_machine: FastPassMachine = FastPassMachine(service_rate)
+                self.fast_pass_machine: FastPassMachine = FastPassMachine(
+                    attraction_name=name,
+                    service_rate=service_rate,
+                    hours_open=hours_open,
+                    fastpass_pool_size=fastpass_pool_size,
+                )
 
     def serve(self):
         # We calculate the amount of people the attraction can serve each minute
@@ -111,11 +139,12 @@ class Park:
         fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
         alt_queue: str = None,
         hours_open: int = 16,
+        fastpass_pool_size: float = 0.3,
     ) -> None:
         self.current_time: int = 0
         self.closing_time: int = 60 * hours_open
         self.attractions: list[Attraction] = self._handle_attractions(
-            attraction_dict, alt_queue
+            attraction_dict, alt_queue, hours_open, fastpass_pool_size
         )
         self.activities: list[Activity] = self._handle_activities(activities_dict)
         self.guest_archetypes: list[Archetype] = self._handle_archetypes(archetype_dict)
@@ -217,7 +246,11 @@ class Park:
         return activity_list
 
     def _handle_attractions(
-        self, attraction_dict: dict[str, dict], alt_queue: str = None
+        self,
+        attraction_dict: dict[str, dict],
+        alt_queue: str = None,
+        hours_open: int = 16,
+        fastpass_pool_size: float = 0.3,
     ) -> list[Attraction]:
         if not bool(attraction_dict):
             raise IndexError("Dictionary is Empty") from None
@@ -231,6 +264,8 @@ class Park:
                 popularity=details.get("Popularity"),
                 service_rate=details.get("ServiceRate"),
                 alt_queue=alt_queue,
+                hours_open=hours_open,
+                fastpass_pool_size=fastpass_pool_size,
             )
             attraction_list.append(attraction)
 
@@ -253,7 +288,7 @@ class Park:
             if time > maxTime:
                 break
 
-            if np.random.uniform() < self.function(time / 60, 0):
+            if np.random.uniform() < self.function(time / 60, 1):
                 archetype: Archetype = choice(self.guest_archetypes)
                 new_guest: Person = Person(
                     len(self.guests), int(ceil(time)), archetype, park_closing_time
