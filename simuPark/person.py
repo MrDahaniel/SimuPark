@@ -139,6 +139,12 @@ class Person:
 
     # Disney FastPass specific
 
+    def choose_what_to_do_DFP(
+        self, activities: list[Activity], attractions: list[Attraction]
+    ):
+
+        pass
+
     def check_attraction_fastpass(self, attraction: Attraction):
         # First, we check the wait time for the attraction
         # if the wait time is less than 30 minutes, and lower than

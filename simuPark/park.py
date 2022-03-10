@@ -1,6 +1,7 @@
 from math import ceil, gamma
 from random import choice
 from typing import Callable, Tuple
+from unicodedata import name
 from simuPark.person import Person, Archetype
 from simuPark.constants import ACTIVITIES, ARCHETYPES, ATTRACTIONS
 from tqdm import tqdm
@@ -88,11 +89,13 @@ class Attraction(Activity):
         alt_queue: str = None,
         hours_open: int = 16,
         fastpass_pool_size: float = 0.3,
+        fastpass_serve_size: float = 0.6,
     ) -> None:
         super().__init__(name, popularity, duration)
         self.service_rate: int = service_rate
         self.fake_wait_time: int = 0
         self.queue: Queue = Queue()
+        self.fastpass_serve_size: float = fastpass_serve_size
 
         if alt_queue in ["DFP", "SFP"]:
             self.alt_queue: Queue = Queue(type=alt_queue)
@@ -121,10 +124,29 @@ class Attraction(Activity):
             self.alt_queue.add_to_queue(person)
 
     def serve_with_fastpass(self):
-        pass
+        # We calculate the amount of people the attraction can serve each minute
+        n_people_to_serve: int = int(np.floor(self.service_rate / 60))
 
-    def update_wait_time(self):
-        pass
+        # Then we calculate the fastpass people to serve,
+        n_fastpass_serve: int = int(n_people_to_serve * self.fastpass_serve_size)
+
+        # We check if the number of people in the fast pass line is lower
+        # than the number of the serve size. If so, we serve all fastpass holders.
+        if n_fastpass_serve > len(self.alt_queue.in_queue):
+            n_fastpass_serve = len(self.alt_queue.in_queue)
+
+        # And we calculate the number of people to serve on the normal line
+        # this value is tied to the number of people being served in the fastpass
+        # lane
+        n_normal_serve: int = n_people_to_serve - n_fastpass_serve
+
+        # Finally, we make both queues serve the guests
+        self.queue.serve(
+            name=self.name, n_people=n_normal_serve, duration=self.duration
+        )
+        self.alt_queue.serve(
+            name=self.name, n_people=n_fastpass_serve, duration=self.duration
+        )
 
     def update_fake_wait_time(self):
         pass
@@ -136,7 +158,7 @@ class Park:
         attraction_dict: dict[str, dict] = ATTRACTIONS,
         activities_dict: dict[str, dict] = ACTIVITIES,
         archetype_dict: dict[str, dict] = ARCHETYPES,
-        fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
+        fn: Callable[[float], float] = lambda x, k: k**x * np.exp(-k) / gamma(x + 1),
         alt_queue: str = None,
         hours_open: int = 16,
         fastpass_pool_size: float = 0.3,
