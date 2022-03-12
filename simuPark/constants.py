@@ -24,4 +24,5 @@ ATTRACTIONS = {
     "SlowRiver": {"Duration": 5, "Popularity": 3, "ServiceRate": 800},
     "StarWarsRide": {"Duration": 3, "Popularity": 6, "ServiceRate": 900},
     "SpaceMountain": {"Duration": 3, "Popularity": 8, "ServiceRate": 1200},
+    "SpinningCups": {"Duration": 3, "Popularity": 5, "ServiceRate": 1000},
 }

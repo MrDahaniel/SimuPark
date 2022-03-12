@@ -417,3 +417,8 @@ class DisneyPark(Park):
     def _serve_guests(self):
         for attraction in self.attractions:
             attraction.serve_with_fastpass()
+
+    def _update_wait_times(self):
+        for attraction in self.attractions:
+            attraction.queue._update_wait_time(service_rate=attraction.service_rate)
+            attraction.alt_queue._update_wait_time(service_rate=attraction.service_rate)

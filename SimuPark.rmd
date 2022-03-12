@@ -22,7 +22,7 @@ Lo primero a realizar es cargar nuestro dataset. Como tal, este dataset fue reco
 
 ```{r}
 # entryDF <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/crowdLevels.csv")
-entryDF <- read.table("./datasets/crowdLevels.csv", header = T)
+entryDF <- read.table("./datasets/crowdLevelsMagicKindom.csv", header = T)
 
 knitr::kable(head(entryDF))
 ```
@@ -42,7 +42,7 @@ plot(entryDF)
 ```
 
 ```{r}
-lm_model <- lm(formula = value ~ poly(variable, 5, raw = TRUE), data = entryDF)
+lm_model <- lm(formula = value ~ poly(variable, 7, raw = TRUE), data = entryDF)
 lm_model
 ```
 
