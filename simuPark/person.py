@@ -116,6 +116,7 @@ class Person:
     def join_queue(self, attraction: Attraction, queue: str = "NORMAL"):
         # time_left_in_activity is set to -1 to indicate person being in a queue, this way
         # it can be added to the total_wait_time on the next cycle
+        # Coconut.jpg
         self.time_left_in_activity = -1
         attraction.add_to_queue(self, queue)
 
@@ -175,14 +176,11 @@ class DisneyPerson(Person):
         # if the wait time is less than 30 minutes, and lower than
         # their max wait time, they will join the normal queue
         # if the person has fastpass, they check if they still can make it in time
-        elif (
-            attraction.queue.wait_time <= 30
-            and attraction.queue.wait_time <= self.max_wait
-        ):
+        elif attraction.queue.wait_time <= min(30, self.max_wait):
             if (
                 self.fastpass is None 
                 or (self.fastpass is not None 
-                    and attraction.queue.wait_time + 5 < self.fastpass[1] - time)
+                    and attraction.queue.wait_time + attraction.duration + 5 < self.fastpass[1] - time)
                 ):
                 # We set the time_left_in_activity to -1 to identify as the person
                 # is waiting on queue
