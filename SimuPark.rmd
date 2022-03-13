@@ -1,18 +1,78 @@
-# Simupark: Simulando Un Parque De Diversiones
+# **SimuPark: Simulando Un Parque De Diversiones**
 
-## Introducción
+## **Resumen**
 
-## Desarrollo
+El presente documento examina una problemática que se presenta en cualquier lugar donde se encuentre una cantidad excesiva de personas y haya la necesidad de hacer filas. La teoría de colas es un estudio matemático que busca entender el comportamiento de las líneas de espera dentro de un sistema, donde el cliente presenta una solicitud para que se le presten un servicio y este a su vez dependerá de una variante, la demanda, ya que con esta se determina el tiempo de espera que debe tener la persona hasta obtener lo que requiere. El ecosistema a estudiar se presenta dentro
+de los parques de diversiones, en los cuales se presentan problemas a la hora de ingresar a diferentes atracciones, donde las personas pueden durar mucho mas tiempo realizando las colas que divirtiéndose en los juegos. Situación que además de desafortunada para el cliente, también lo será para el parque de diversiones, pues entre más cómoda sea la espera a las atracciones, mayores serán las probabilidades de que la persona quiera volver al parque. Es por ello que se plantea: ¿Existirá alguna forma para que las personas puedan divertirse más y así disminuir el tiempo de espera en las diferentes atracciones?
 
-### Planteando El Modelo
+## **Introducción**
 
-### Recolectando Y Procesando Datos
+La teoría de líneas de espera inicia con el trabajo de Agner Krarup Erlang matemático Danés, el cual en el estudio de líneas telefónicas obtuvo la fórmula para la distribución del número de líneas de espera, a partir de aquí la teoría de colas se aplica en un sinfín de estudios encargados del comportamiento de sistemas como el tráfico automovilístico, las filas de un banco o el flujo de mensaje.
 
-Una de las partes más importantes en cuanto se refiere a la construcción de nuestro modelo de simulación, está en la recolección de los datos necesarios para poder estar lo más cerca a el comportamiento real. En este caso, esto no es la excepción. 
+El objetivo principal de la teoría de colas es modelar el sistema que presenta estas líneas de espera, con el fin de observar el comportamiento y posibles alternativas de solución para obtener el resultado más optimo según el estudio que se realice. Teniendo esto presente, la teoría de colas será fundamental para el desarrollo del estudio, este se centrará en el sistema que conforma un parque de diversiones, donde se concentra una población grande de personas, las cuales desean probar cada atracción presente.
+
+Este sistema a estudiar presenta múltiples variables ya que no se van a presentar los mismos escenarios, puede influir ya sea la hora del día, un fecha especial en el año, el clima, los precios de cada una de las atracciones, la fama de cada juego, entre otras. Las ferias encargadas de los parques de diversiones han aplicado una transformación al sistema donde se usa el Fast Pass, este es un método para agilizar las colas, pero ¿Es efectivo? ¿Las personas invierten menos tiempo en esperas y más en divertirse?
+
+## **Formulación Del Problema**
+
+Uno de los principales problemas que se presentan en cualquier tipo de cola, o fila, está en el tiempo de espera que implica estar en estas. Este tiempo de espera depende de 2 variables: la tasa de servicio, o el tiempo en el cual sale gente de la fila; y la tasa de llegada, que se refiere a la velocidad con la que ingresan personas a la fila. Es a partir de esto que funcionan todas las colas.
+
+Los parques de diversiones son centros de recreación que atraen a multitudes de personas que desean disfrutar de las distintas gamas de atracciones que se manejan. Siendo así, uno de los problemas a los que tienen que enfrentarse tanto los visitantes son las largas colas que se pueden presentar en muchas de las atracciones. Esto, en el peor de los casos, puede generar descontento en los visitantes debido a la gran cantidad de tiempo que perdieron esperando, lo que a la larga, podría afectar la reputación del parque y las ganancias del mismo.
+
+Partiendo de esto, el problema que se busca solucionar son estas mismas colas, y las diferentes técnicas que se pueden emplear para poder reducir el tiempo de espera promedio de los visitantes. De esta manera, se busca mejorar la experiencia general del público asistente que, en respuesta, implicaría una mejora de los ingresos generados por el parque.
+
+## **Objetivos**
+
+### **Objetivo General**
+
+-   Analizar el comportamiento de las filas de las atracciones de un parque de diversiones a partir de simulaciones computacionales para determinar qué estrategias son más efectivas para la reducción del tiempo de espera promedio.
+
+### **Objetivos Específicos**
+
+-   Determinar qué estrategia conlleva la mayor reducción del tiempo de espera en las colas del parque.
+-   Identificar los diferentes factores que se relacionan con el tiempo de espera promedio de cada una de las atracciones del parque.
+-   Determinar las diferentes limitaciones que presenta el parque en cuanto el manejo de las colas de cada una de sus atracciones.
+-   Analizar qué tanto se puede incrementar el flujo de visitantes a un parque de diversiones y si la cantidad de atracciones en las que se subieron aumentó con un cambio de estrategia FastPass.
+
+## **Conceptualización del modelo**
+
+El modelo empleado como punto de partida en el estudio de la simulación del comportamiento de las colas de espera presentadas en un parque de atracciones se puede ver simplificado en el siguiente diseño, el cual cuenta con ciertos componentes en los que se involucra la conducta o 'arquetipo' de cada persona a la hora de recurrir a las diferentes atracciones, las actividades que la persona podría elegir, las atracciones, y muchas más variables que influirán en la ejecución de la simulación:
+
+<p align="center">
+  <img src="https://imgur.com/D80tmov.png" />
+</p>
+
+Se inicia con el estudio de las diferentes personas, sus gustos y arquetipos para obtener una lectura que permita crear un mapa global de cada una de las distintas opciones que puede elegir las personas, tomando el arquetipo como punto de partida para obtener los gustos que pueden presentar los visitantes en el modelo.
+
+El parque de atracciones contará con la entidad de actividades que determina cada una de las opciones que pueden seleccionar las personas, teniendo en consideración que cada actividad presente puede ser una atracción distinta, la cual cuenta con tiempo de espera y un tiempo de servicio en la que cada persona puede participar.
+
+El concepto estudiado en modelo parte desde un caso base presente en cada uno de los parque de atracciones en el cual no se emplean técnicas para mejorar la conducta de las colas sino empleando el sistema FIFO, este caso base se centra en un flujo donde la persona al ingresar al parque selecciona si desea realizar una actividad o si por el contrario decide emplear tiempo en la cola de espera de una de las atracciones para disfrutar de ella, luego de esto la persona decide si desea realizar otra actividad o ingresar a otra atracción hasta que esta decida irse, teniendo como resultado el siguiente diagrama:
+
+<p align="center">
+  <img src="https://imgur.com/gCywLid.png" />
+</p>
+
+A su vez se desea comparar este modelo tradicional del funcionamiento de los parques de atracciones con otros modelos que emplean tácticas para que sus sistemas de espera faciliten la movilidad de los usuarios, teniendo presente esto, el modelo con un diseño como el del SalitrePass presenta una modificación en los tiempos de espera presente en cada una de las atracciones. La persona puede elegir si entrar a una fila normal o la fila perteneciente al SalitePass, esto depende del tiempo de espera presentante en cada una y de la decisión de la persona.
+
+<p align="center">
+  <img src="https://imgur.com/uJwzvGn.png" />
+</p>
+
+Otro modelo de comparación es el empleado en los parques de diversiones de Disney donde presentan una facilidad llamada FastPass donde la persona que presenta el FastPass debe presentarse frente a la atracción a la hora especificada en el comprobante, esto con el fin de que la persona no realice filas sino que ingrese directamente a la atracción o actividad, de lo contrario decidirá si quiere unirse a la fila, comprar un FastPass para la atracción o realizar otra actividad, teniendo como resultado el siguiente flujo:
+
+<p align="center">
+  <img src="https://imgur.com/LNKBfEc.png" />
+</p>
+
+## **Desarrollo**
+
+### **Recolectando Y Procesando Datos**
+
+Una de las partes más importantes en cuanto se refiere a la construcción de nuestro modelo de simulación, está en la recolección de los datos necesarios para poder estar lo más cerca a el comportamiento real. En este caso, esto no es la excepción.
 
 Para poder realizar el modelado de las diferentes componentes del parque de diversiones de nuestra simulación, requeríamos conocer, o por lo menos aproximar, 3 parámetros los cuales afectan de gran medida los resultados finales. La función de llegada de los visitantes al parque, la cual determina la cantidad de personas que llegan a parque dependiendo la hora del día; los arquetipos de las personas, los cuales determinan el comportamiento de las personas ya en el parque; y las principales caracterísitcas de las atracciones, principalmente la tasa de servicio y la popularidad de las mismas. Siendo así, se llevaron acabo diferentes procedimientos para la determinación de estos parámetros.
 
-#### Determinando La Función De Entrada Al Parque
+#### **Determinando La Función De Entrada Al Parque**
 
 La principal necesidad de determinar la función que describa el comportamiento de la entrada de las personas al parque, está en el como este afecta los tiempos de espera de manera general dentro del parque.
 
@@ -21,32 +81,35 @@ La principal necesidad de determinar la función que describa el comportamiento 
 Lo primero a realizar es cargar nuestro dataset. Como tal, este dataset fue recolectado de diferentes páginas web las cuales indicaban una especie de nivel de "llenura". Aunque se han de reconocer las limitaciones de la información que verdaramente provee, debido a la escacez de los datos que hay sobre las tasas de entrada en muchos de los parques, es lo más cercano que se tiene a un reporte de la manera en la que las personas visitan el parque.
 
 ```{r}
-# entryDF <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/crowdLevels.csv")
-entryDF <- read.table("./datasets/crowdLevelsMagicKindom.csv", header = T)
+entry_df <- read.table("./datasets/crowdLevelsMagicKindom.csv", header = T)
 
-knitr::kable(head(entryDF))
+knitr::kable(head(entry_df))
 ```
 
 Eliminamos la fila del nombre del parque.
 
 ```{r, message=FALSE}
-entryDF <- entryDF[, 2:18]
+entry_df <- entry_df[, 2:18]
 
-library(reshape2)
-entryDF <- melt(entryDF)
-entryDF$variable <- as.numeric(sub("X", "", entryDF$variable)) - 8
+entry_df <- reshape2::melt(entry_df)
+entry_df$variable <- as.numeric(sub("X", "", entry_df$variable)) - 8
+```
+
+```{r, echo = FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(entry_df)
 ```
 
 ```{r}
-plot(entryDF)
+lm_model <- lm(formula = value ~ poly(variable, 7, raw = TRUE), data = entry_df)
 ```
 
-```{r}
-lm_model <- lm(formula = value ~ poly(variable, 7, raw = TRUE), data = entryDF)
+```{r, echo = FALSE}
 lm_model
 ```
 
-```{r}
+Ya a partir de estos coeficientes calculados por la función `lm`, podemos convertir el modelos a su forma de ecuación polinómica el modelo propuesto.
+
+```{r, echo = FALSE}
 model_fn <- function(x, coef) {
     y <- 0
     dg <- 0
@@ -61,64 +124,109 @@ print_model <- function(coef) {
     y <- "0"
     dg <- 0
     for (co in coef) {
-        y <- paste(y, "+", co, "* (x **", dg, ")")
+        y <- paste(y, "+ (", co, ") * ( x **", dg, ")")
         dg <- dg + 1
     }
-    print(y)
+    print(y, quote = FALSE)
 }
 ```
 
-```{r, echo=FALSE, fig.align='center'}
-plot(entryDF)
-curve(model_fn(x, lm_model$coefficients), from = 0, to = 16, add = TRUE)
-```
-
-```{r}
+```{r, echo = FALSE}
 print_model(lm_model$coefficients)
 ```
 
-#### Definiendo Los Arquetipos De Los Visitantes
+Y a partir de esto, podremos realizar la visualización del modelos planteado y ver el ajuste de este con respecto a los datos que se tienen.
+
+```{r, echo=FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(entry_df, main = 'Niveles de "llenura"', xlab = "Tiempo", ylab = "Nivel")
+curve(model_fn(x, lm_model$coefficients), from = 0, to = 16, add = TRUE)
+```
+
+Será a partir de este modelo por el cual se definirá la entrada de las personas al parque. Esto tiene una gran importancia pues es a partir de esto que se definirá tanto la cantidad de visitantes al parque como el estos van llegando.
+
+#### **Definiendo Los Arquetipos De Los Visitantes**
 
 Carguemos nuestro dataset relacionado con las respuestas recolectadas.
 
 ```{r}
-# formsDF = read.csv()
-formsDF <- read.csv("./datasets/formResponses.csv")[2:10]
-knitr::kable(head(formsDF))
+forms_df <- read.csv("./datasets/formResponses.csv")[2:10]
+```
+
+```{r, echo = FALSE}
+knitr::kable(head(forms_df))
 ```
 
 Ya con estos datos disponibles, debemos determinar 3 componentes princiaples para poder definir cada uno de los arquetipos de los visitantes al parque. El primero de estos está en la preferencia de realizar una actividad sobre una atracción. En este sentido, tendremos que basarnos sobre las respuestas relacionadas con los gustos de las personas.
 
-##### Probabilidad De Atracciones Sobre Actividades
+##### **Probabilidad De Atracciones Sobre Actividades**
 
 ```{r}
-preferenceDF <- formsDF[1:5]
-knitr::kable(head(preferenceDF))
+preference_df <- forms_df[1:5]
 ```
 
-Lo primero que vamos a hacer con el fin de definir los porcentajes de preferencia de las personas estará en promediar el valor de cada una de las actividades. De esta manera, tendremos el valor general de que estos realicen una activiadad. 
+```{r, echo = FALSE}
+knitr::kable(head(preference_df))
+```
+
+Lo primero que vamos a hacer con el fin de definir los porcentajes de preferencia de las personas estará en promediar el valor de cada una de las actividades. De esta manera, tendremos el valor general de que estos realicen una activiadad. Partiendo de esto, sólo queda sacar la fracción entre el valor de la atracción sobre la suma del puntaje promedio de las activiades con el puntaje de la atracción para tener un aproximado de las preferencias de las personas.
 
 ```{r}
-preferenceDF$PromAct <- rowMeans(preferenceDF[, c(1, 2, 4, 5)])
-knitr::kable(head(preferenceDF))
+preference_df$PromAct <- rowMeans(preference_df[, c(1, 2, 4, 5)])
+preference_df$ProbAttr <- (preference_df[, 3]) / (preference_df[, 3] + preference_df[, 6])
 ```
 
-Partiendo de esto, sólo queda sacar la fracción entre el valor de la atracción sobre la suma del puntaje promedio de las activiades con el puntaje de la atracción para tener un aproximado de las preferencias de las personas.
+```{r, echo = FALSE}
+knitr::kable(head(preference_df))
+```
+
+Entonces, a partir de esto, podemos encontrar los cuantiles de nuestros promedios para poder tomar los valores base de las probabilidades de escoger una atracción sobre una actividad, De esta manera, podremos podremos definir más adelante nuestros arquetipos para los visitantes del parque.
 
 ```{r}
-# preferenceDF$ProbAttr <- (preferenceDF[, 3]) / (preferenceDF[, 3] + preferenceDF[, 6] * 2)
-# preferenceDF$ProbAttr <- (preferenceDF[, 3]) / (sum(preferenceDF[, c(1, 2, 4, 5)]))
-preferenceDF$ProbAttr <- (preferenceDF[, 3]) / (preferenceDF[, 3] + preferenceDF[, 6])
-# knitr::kable(head(preferenceDF))
-preferenceDF
+quantiles <- quantile(preference_df$ProbAttr)
 ```
 
-#### La Popularidad Y La Tasa De Servicio De Las Atracciones
+```{r, echo = FALSE}
+quantiles
+```
 
-### Implementación De La Simulación
+A partir de estos 5 cuantiles, podemos definir los valores generales de la probabilidad de escoger una atracción sobre una actividad. Siendo así, se trabajarán con un total de 5 probabilidades para el desarrollo de la simulación.
 
-### Simulando El Parque
+#### **Tiempos De Espera Y Estadía**
 
-### Análisis De Los Resultados
+Ya teniendo definidas las diferentes probabilidades de escoger las atracciones, nos queda por definir los diferentes tiempos tanto de estadía el parque. Estos tiempos, nuevamente, serán definidos por las diferentes respúestas recibidas en la encuesta realizada.
 
-## Conclusiones
+Empecemos determinando los tiempos de espera máximos para cada uno de los arquetipos. Siendo así, se trabajaran la columna relacionada con estos datos.
+
+```{r}
+wait_df <- forms_df[8]
+```
+```{r, echo=FALSE}
+knitr::kable(head(wait_df))
+```
+
+```{r}
+reps <- table(wait_df$TiempoEspera)
+# reps[[1]]
+```
+
+```{r}
+tiempos_de_espera <- c()
+total_respuestas <- length(wait_df[, 1])
+
+for (val in reps) {
+    tiempos_de_espera <- c(tiempos_de_espera, val[[1]] / total_respuestas)
+}
+
+reps$porcentaje <- tiempos_de_espera
+knitr::kable(reps)
+```
+
+#### **La Popularidad Y La Tasa De Servicio De Las Atracciones**
+
+### **Implementación De La Simulación**
+
+### **Simulando El Parque**
+
+### **Análisis De Los Resultados**
+
+## **Conclusiones**
