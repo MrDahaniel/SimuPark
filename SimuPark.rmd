@@ -81,7 +81,7 @@ La principal necesidad de determinar la función que describa el comportamiento 
 Lo primero a realizar es cargar nuestro dataset. Como tal, este dataset fue recolectado de diferentes páginas web las cuales indicaban una especie de nivel de "llenura". Aunque se han de reconocer las limitaciones de la información que verdaramente provee, debido a la escacez de los datos que hay sobre las tasas de entrada en muchos de los parques, es lo más cercano que se tiene a un reporte de la manera en la que las personas visitan el parque.
 
 ```{r}
-entry_df <- read.table("./datasets/crowdLevelsMagicKindom.csv", header = T)
+entry_df <- read.table("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/crowdLevelsMagicKindom.csv", header = T)
 
 knitr::kable(head(entry_df))
 ```
@@ -111,23 +111,23 @@ Ya a partir de estos coeficientes calculados por la función `lm`, podemos conve
 
 ```{r, echo = FALSE}
 model_fn <- function(x, coef) {
-    y <- 0
-    dg <- 0
-    for (co in coef) {
-        y <- y + (co * (x**dg))
-        dg <- dg + 1
-    }
-    return(y)
+  y <- 0
+  dg <- 0
+  for (co in coef) {
+    y <- y + (co * (x**dg))
+    dg <- dg + 1
+  }
+  return(y)
 }
 
 print_model <- function(coef) {
-    y <- "0"
-    dg <- 0
-    for (co in coef) {
-        y <- paste(y, "+ (", co, ") * ( x **", dg, ")")
-        dg <- dg + 1
-    }
-    print(y, quote = FALSE)
+  y <- "0"
+  dg <- 0
+  for (co in coef) {
+    y <- paste(y, "+ (", co, ") * ( x **", dg, ")")
+    dg <- dg + 1
+  }
+  print(y, quote = FALSE)
 }
 ```
 
@@ -149,7 +149,7 @@ Será a partir de este modelo por el cual se definirá la entrada de las persona
 Carguemos nuestro dataset relacionado con las respuestas recolectadas.
 
 ```{r}
-forms_df <- read.csv("./datasets/formResponses.csv")[2:10]
+forms_df <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/formResponses.csv")[2:10]
 ```
 
 ```{r, echo = FALSE}
@@ -189,35 +189,83 @@ quantiles <- quantile(preference_df$ProbAttr)
 quantiles
 ```
 
-A partir de estos 5 cuantiles, podemos definir los valores generales de la probabilidad de escoger una atracción sobre una actividad. Siendo así, se trabajarán con un total de 5 probabilidades para el desarrollo de la simulación.
+A partir de estos 5 cuantiles, podemos definir los valores generales de la probabilidad de escoger una atracción sobre una actividad. Siendo así, y teniendo en cuenta que los cuartiles de 25%, 50% y 75 son relativamente similares, se trabajarán con un total de 3 probabilidades para el desarrollo de la simulación.
 
 #### **Tiempos De Espera Y Estadía**
 
 Ya teniendo definidas las diferentes probabilidades de escoger las atracciones, nos queda por definir los diferentes tiempos tanto de estadía el parque. Estos tiempos, nuevamente, serán definidos por las diferentes respúestas recibidas en la encuesta realizada.
 
-Empecemos determinando los tiempos de espera máximos para cada uno de los arquetipos. Siendo así, se trabajaran la columna relacionada con estos datos.
+Empecemos determinando los tiempos de espera máximos para cada uno de los arquetipos. Lo primero que haremos será determinar los porcentajes que representa cada uno de los intervalos que se han definido
 
 ```{r}
 wait_df <- forms_df[8]
-```
-```{r, echo=FALSE}
-knitr::kable(head(wait_df))
-```
+reps <- cbind(table(wait_df))
+reps <- unname(cbind(reps, row.names(reps)))
+reps <- data.frame(reps)
 
-```{r}
-reps <- table(wait_df$TiempoEspera)
-# reps[[1]]
-```
+colnames(reps) <- c("repeticiones", "tiempo_espera")
 
-```{r}
-tiempos_de_espera <- c()
-total_respuestas <- length(wait_df[, 1])
+t_espera <- c()
+total_respuestas <- nrow(wait_df)
 
-for (val in reps) {
-    tiempos_de_espera <- c(tiempos_de_espera, val[[1]] / total_respuestas)
+for (i in 1:nrow(reps)) {
+  t_espera <- c(t_espera, as.integer(reps[i, 1]) / total_respuestas)
 }
 
-reps$porcentaje <- tiempos_de_espera
+
+reps$porcentaje <- cbind(t_espera)
+```
+```{r, echo=FALSE}
+knitr::kable(reps)
+```
+
+```{r}
+c(53, 9, 4)
+```
+
+Apliquemos este mismo proceso para determinar los tiempos de estadía dentro del parque.
+
+```{r}
+wait_df <- forms_df[6]
+reps <- cbind(table(wait_df))
+reps <- unname(cbind(reps, row.names(reps)))
+reps <- data.frame(reps)
+
+colnames(reps) <- c("repeticiones", "tiempo_espera")
+
+t_espera <- c()
+total_respuestas <- nrow(wait_df)
+
+for (i in 1:nrow(reps)) {
+  t_espera <- c(t_espera, as.integer(reps[i, 1]) / total_respuestas)
+}
+
+reps$porcentaje <- cbind(t_espera)
+```
+
+```{r, echo=FALSE}
+knitr::kable(reps)
+```
+
+```{r}
+wait_df <- forms_df[7]
+reps <- cbind(table(wait_df))
+reps <- unname(cbind(reps, row.names(reps)))
+reps <- data.frame(reps)
+
+colnames(reps) <- c("repeticiones", "tiempo_espera")
+
+t_espera <- c()
+total_respuestas <- nrow(wait_df)
+
+for (i in 1:nrow(reps)) {
+  t_espera <- c(t_espera, as.integer(reps[i, 1]) / total_respuestas)
+}
+
+reps$porcentaje <- cbind(t_espera)
+```
+
+```{r, echo=FALSE}
 knitr::kable(reps)
 ```
 
