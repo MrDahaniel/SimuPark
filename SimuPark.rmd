@@ -231,7 +231,33 @@ reps <- cbind(table(wait_df))
 reps <- unname(cbind(reps, row.names(reps)))
 reps <- data.frame(reps)
 
-colnames(reps) <- c("repeticiones", "tiempo_espera")
+colnames(reps) <- c("repeticiones", "tiempo_estadia_min")
+
+t_espera <- c()
+total_respuestas <- nrow(wait_df)
+
+for (i in 1:nrow(reps)) {
+  t_espera <- c(t_espera, as.integer(reps[i, 1]) / total_respuestas)
+}
+
+reps$porcentaje <- cbind(t_espera)
+```
+
+```{r}
+c(48, 30, 4)
+```
+
+```{r, echo=FALSE}
+knitr::kable(reps)
+```
+
+```{r}
+wait_df <- forms_df[7]
+reps <- cbind(table(wait_df))
+reps <- unname(cbind(reps, row.names(reps)))
+reps <- data.frame(reps)
+
+colnames(reps) <- c("repeticiones", "tiempo_estadia_max")
 
 t_espera <- c()
 total_respuestas <- nrow(wait_df)
@@ -248,28 +274,28 @@ knitr::kable(reps)
 ```
 
 ```{r}
-wait_df <- forms_df[7]
-reps <- cbind(table(wait_df))
-reps <- unname(cbind(reps, row.names(reps)))
-reps <- data.frame(reps)
-
-colnames(reps) <- c("repeticiones", "tiempo_espera")
-
-t_espera <- c()
-total_respuestas <- nrow(wait_df)
-
-for (i in 1:nrow(reps)) {
-  t_espera <- c(t_espera, as.integer(reps[i, 1]) / total_respuestas)
-}
-
-reps$porcentaje <- cbind(t_espera)
-```
-
-```{r, echo=FALSE}
-knitr::kable(reps)
+c(16, 47, 20)
 ```
 
 #### **La Popularidad Y La Tasa De Servicio De Las Atracciones**
+
+Ya saliendo de las encuestas, pasamos a nuestro valores definidos ya como tal. Partamos por las tasas de servicio de las atracciones con las que estaremos trabajando. De manera oficial, no existen como tal registros de las tasas de servicio para ninguna de las atracciones dentro de los parques de Disney, por este motivo, se tuvo que recurrir a estimaciones realizadas por los visitantes del parque. Una de estas fuentes, [wdwthemeparks.com](https://wdwthemeparks.com/hourly-capacity-numbers/), nos presenta con una gran mayoría de los tiempos de espera para los algunos de los parque de atracciones de Disney. 
+
+Para el desarrollo de este ejercicio, se tomará como referencia el parque de Animal Kingdom, esto principalmente a que es el parque con los datos más completos dentro todos los que se tienen disponibles. Siendo así, en la simulación se trabajarán con las siguientes atracciones:
+
+```{r, echo=FALSE}
+attractions <- c(
+  "DINOSAUR", "Expedition Everest", "Flight of Passage",
+  "Kali River Rapids", "Kilimanjaro Safaris", "Na'vi River Journey",
+  "TriceraTop Spin", "Wildlife Express Train"
+)
+service_rates <- c(
+  "1800", "1800-2060", "1280-1440", "1800-2000",
+  "3000", "1080-1440", "800-900", "1000-1250"
+)
+
+knitr::kable(cbind(attractions, service_rates))
+```
 
 ### **Implementación De La Simulación**
 

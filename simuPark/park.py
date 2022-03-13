@@ -16,6 +16,8 @@ class Queue:
         self.top_wait_time: int = 0
         self.in_queue: list[Person] = []
 
+        self.max_in_queue = 0
+
     def serve(self, name: str, n_people: int, duration: int):
         # In this scenario, the number of people in queue is less or the same as the
         # service rate of the attraction, everyone on the queue is served.
@@ -29,8 +31,20 @@ class Queue:
     def add_to_queue(self, person: Person):
         self.in_queue.append(person)
 
+    def _update_max_in_queue(self, service_rate: int, whole_queue: list[Person]):
+        self.max_in_queue = max(self.max_in_queue, len(whole_queue))
+
     def _update_wait_time(self, service_rate: int):
-        new_wait_time = 5 * round((len(self.in_queue) / (service_rate / 60)) / 5)
+        new_wait_time = 5 * round((len(self.in_queue) * 60 / (service_rate)) / 5)
+        self.top_wait_time = max(new_wait_time, self.wait_time)
+        self.wait_time = new_wait_time
+
+
+class TotalQueue(Queue):
+    def _update_wait_time(self, service_rate: int, whole_queue: list[Person]):
+        self._update_max_in_queue(service_rate=service_rate, whole_queue=whole_queue)
+
+        new_wait_time = 5 * round((len(whole_queue) * 60 / (service_rate)) / 5)
         self.top_wait_time = max(new_wait_time, self.wait_time)
         self.wait_time = new_wait_time
 
@@ -104,6 +118,7 @@ class Attraction(Activity):
             self.alt_queue: Queue = Queue(type=alt_queue)
 
             if alt_queue == "DFP":
+                self.queue: TotalQueue = TotalQueue()
                 self.fast_pass_machine: FastPassMachine = FastPassMachine(
                     attraction_name=name,
                     service_rate=service_rate,
@@ -223,7 +238,7 @@ class Park:
                     )
 
                     if isinstance(selection, Attraction):
-                        guest.check_attraction(selection)
+                        guest.check_attraction(selection, self.closing_time - minute)
                         # guest.do_activity(selection.name, selection.duration)
                         # print("Chose attraction")
                     elif isinstance(selection, Activity):
@@ -405,7 +420,9 @@ class DisneyPark(Park):
                     )
 
                     if isinstance(selection, Attraction):
-                        guest.check_attraction(selection, minute)
+                        guest.check_attraction(
+                            selection, self.closing_time - minute, minute
+                        )
                         # guest.do_activity(selection.name, selection.duration)
                         # print("Chose attraction")
                     elif isinstance(selection, Activity):
@@ -420,5 +437,9 @@ class DisneyPark(Park):
 
     def _update_wait_times(self):
         for attraction in self.attractions:
-            attraction.queue._update_wait_time(service_rate=attraction.service_rate)
+            whole_queue = attraction.queue.in_queue + attraction.alt_queue.in_queue
+            attraction.queue._update_wait_time(
+                service_rate=attraction.service_rate,
+                whole_queue=whole_queue,
+            )
             attraction.alt_queue._update_wait_time(service_rate=attraction.service_rate)

@@ -43,6 +43,7 @@ class Person:
         self.total_wait_time: int = 0
         self.arrival_time: int = arrival_time
         self.things_done: list[str] = []
+        self.queues_joined: int = 0
 
         # Archetype defined
         self.archetype: str = archetype.name
@@ -59,7 +60,8 @@ class Person:
     # General functions, used in all scenarios
 
     def report(self):
-        return f"id: {self.id}  arvTime: {self.arrival_time} things_done: {self.things_done} attrExp: {self.attractions_experienced} "
+        print(f"id: {self.id}  arvTime: {self.arrival_time} things_done: {self.things_done} attrExp: {self.attractions_experienced}")
+        print(f"queues_joined: {self.queues_joined} total_wait_time: {self.total_wait_time} archetype: {self.archetype}" )
 
     def do_activity(self, name: str, duration: int):
         # Person does an activity, it gets set to idle while doing so
@@ -104,19 +106,19 @@ class Person:
         # Finally the person makes a choice of what they want to do
         return choices(population=options, weights=weighed_popularity, k=1)[0]
 
-    def check_attraction(self, attraction: Attraction):
+    def check_attraction(self, attraction: Attraction, time_until_closure: int):
         # This is the vanilla case, we just need to check if the wait time
         # is less than the max wait time.
         # This also can be used if the person doesn't have a turboPass
         # in the Salitre FP scenario.
-        if attraction.queue.wait_time < self.max_wait:
-            self.time_left_in_activity = -1
-            attraction.add_to_queue(self, "NORMAL")
+        if attraction.queue.wait_time < self.max_wait and time_until_closure > attraction.queue.wait_time:
+            self.join_queue(attraction, "NORMAL")
 
     def join_queue(self, attraction: Attraction, queue: str = "NORMAL"):
         # time_left_in_activity is set to -1 to indicate person being in a queue, this way
         # it can be added to the total_wait_time on the next cycle
         # Coconut.jpg
+        self.queues_joined += 1
         self.time_left_in_activity = -1
         attraction.add_to_queue(self, queue)
 
@@ -161,7 +163,7 @@ class DisneyPerson(Person):
             else:
                 return self.spin_roulette(activities)
 
-    def check_attraction(self, attraction: Attraction, time: int):
+    def check_attraction(self, attraction: Attraction, time_until_closure: int, time: int):
 
         if (self.fastpass is not None 
             and self.fastpass[0] == attraction.name 
@@ -170,13 +172,14 @@ class DisneyPerson(Person):
             self.time_left_in_activity = -1
             self.fastpass_used += 1
             self.fastpass = None
-            attraction.add_to_queue(self, "DFP")
+            
+            self.join_queue(attraction, "DFP")
 
         # Now we check the wait time for the attraction
         # if the wait time is less than 30 minutes, and lower than
         # their max wait time, they will join the normal queue
         # if the person has fastpass, they check if they still can make it in time
-        elif attraction.queue.wait_time <= min(30, self.max_wait):
+        elif attraction.queue.wait_time <= min(30, self.max_wait) and time_until_closure > attraction.queue.wait_time:
             if (
                 self.fastpass is None 
                 or (self.fastpass is not None 
@@ -185,7 +188,7 @@ class DisneyPerson(Person):
                 # We set the time_left_in_activity to -1 to identify as the person
                 # is waiting on queue
                 self.time_left_in_activity = -1
-                attraction.add_to_queue(self, "NORMAL")
+                self.join_queue(attraction, "NORMAL")
 
         # In this case, the wait time is more than 30 mins, person checks for fastpass
 
@@ -202,7 +205,8 @@ class DisneyPerson(Person):
             attraction.queue.wait_time <= self.max_wait
             and self.fastpass is not None
             and attraction.queue.wait_time + 5 < self.fastpass[1] - time
+            and time_until_closure > attraction.queue.wait_time
         ):
             self.time_left_in_activity = -1
-            attraction.add_to_queue(self, "NORMAL")
+            self.join_queue(attraction, "NORMAL")
         
