@@ -111,7 +111,7 @@ class Person:
         # is less than the max wait time.
         # This also can be used if the person doesn't have a turboPass
         # in the Salitre FP scenario.
-        if attraction.queue.wait_time < self.max_wait and time_until_closure > attraction.queue.wait_time:
+        if attraction.queue.wait_time < self.max_wait:
             self.join_queue(attraction, "NORMAL")
 
     def join_queue(self, attraction: Attraction, queue: str = "NORMAL"):
@@ -179,7 +179,7 @@ class DisneyPerson(Person):
         # if the wait time is less than 30 minutes, and lower than
         # their max wait time, they will join the normal queue
         # if the person has fastpass, they check if they still can make it in time
-        elif attraction.queue.wait_time <= min(30, self.max_wait) and time_until_closure > attraction.queue.wait_time:
+        elif attraction.queue.wait_time <= min(30, self.max_wait):
             if (
                 self.fastpass is None 
                 or (self.fastpass is not None 
@@ -203,10 +203,10 @@ class DisneyPerson(Person):
         # And the wait time still let's them get in time for their return window
         elif (
             attraction.queue.wait_time <= self.max_wait
-            and self.fastpass is not None
-            and attraction.queue.wait_time + 5 < self.fastpass[1] - time
-            and time_until_closure > attraction.queue.wait_time
         ):
-            self.time_left_in_activity = -1
-            self.join_queue(attraction, "NORMAL")
+            if self.fastpass is None or (
+                self.fastpass is not None and attraction.queue.wait_time + 5 < self.fastpass[1] - time
+            ):
+                self.time_left_in_activity = -1
+                self.join_queue(attraction, "NORMAL")
         

@@ -28,23 +28,25 @@ class Queue:
             person: Person = self.in_queue.pop(0)
             person.ride_attraction(name=name, duration=duration)
 
+        return n_people
+
     def add_to_queue(self, person: Person):
         self.in_queue.append(person)
 
-    def _update_max_in_queue(self, service_rate: int, whole_queue: list[Person]):
-        self.max_in_queue = max(self.max_in_queue, len(whole_queue))
-
     def _update_wait_time(self, service_rate: int):
-        new_wait_time = 5 * round((len(self.in_queue) * 60 / (service_rate)) / 5)
+        new_wait_time = 5 * round((len(self.in_queue) / (service_rate / 60)) / 5)
         self.top_wait_time = max(new_wait_time, self.wait_time)
         self.wait_time = new_wait_time
 
 
 class TotalQueue(Queue):
-    def _update_wait_time(self, service_rate: int, whole_queue: list[Person]):
-        self._update_max_in_queue(service_rate=service_rate, whole_queue=whole_queue)
+    def _update_max_in_queue(self, whole_queue: list[Person]):
+        self.max_in_queue = max(self.max_in_queue, len(whole_queue))
 
-        new_wait_time = 5 * round((len(whole_queue) * 60 / (service_rate)) / 5)
+    def _update_wait_time(self, service_rate: int, whole_queue: list[Person]):
+        self._update_max_in_queue(whole_queue=whole_queue)
+
+        new_wait_time = 5 * round((len(whole_queue) / (service_rate / 60)) / 5)
         self.top_wait_time = max(new_wait_time, self.wait_time)
         self.wait_time = new_wait_time
 
@@ -67,7 +69,7 @@ class FastPassMachine:
     def _handout_fastpass(self, person: Person, time: int) -> bool:
         # We calculate the current hour and the minimun return window
         current_quarter: int = int(np.floor(time / 15))
-        min_fastpass_quarter = current_quarter + 4
+        min_fastpass_quarter = current_quarter + 1
 
         # first we check if the person currently has a fastpass ticket
         if person.fastpass is None:
@@ -114,6 +116,8 @@ class Attraction(Activity):
         self.queue: Queue = Queue()
         self.fastpass_serve_size: float = fastpass_serve_size
 
+        self.total_people_served: int = 0
+
         if alt_queue in ["DFP", "SFP"]:
             self.alt_queue: Queue = Queue(type=alt_queue)
 
@@ -131,7 +135,7 @@ class Attraction(Activity):
         n_people_to_serve = int(np.floor(self.service_rate / 60))
         # We tell out Queue to serve the amount of people given
         # And the duration of the ride
-        self.queue.serve(
+        self.total_people_served += self.queue.serve(
             name=self.name, n_people=n_people_to_serve, duration=self.duration
         )
 
@@ -146,7 +150,9 @@ class Attraction(Activity):
         n_people_to_serve: int = int(np.floor(self.service_rate / 60))
 
         # Then we calculate the fastpass people to serve,
-        n_fastpass_serve: int = int(n_people_to_serve * self.fastpass_serve_size)
+        n_fastpass_serve: int = int(
+            np.floor(n_people_to_serve * self.fastpass_serve_size)
+        )
 
         # We check if the number of people in the fast pass line is lower
         # than the number of the serve size. If so, we serve all fastpass holders.
@@ -159,10 +165,10 @@ class Attraction(Activity):
         n_normal_serve: int = n_people_to_serve - n_fastpass_serve
 
         # Finally, we make both queues serve the guests
-        self.queue.serve(
+        self.total_people_served += self.queue.serve(
             name=self.name, n_people=n_normal_serve, duration=self.duration
         )
-        self.alt_queue.serve(
+        self.total_people_served += self.alt_queue.serve(
             name=self.name, n_people=n_fastpass_serve, duration=self.duration
         )
 

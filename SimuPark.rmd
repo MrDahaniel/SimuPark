@@ -287,11 +287,11 @@ Para el desarrollo de este ejercicio, se tomará como referencia el parque de An
 attractions <- c(
   "DINOSAUR", "Expedition Everest", "Flight of Passage",
   "Kali River Rapids", "Kilimanjaro Safaris", "Na'vi River Journey",
-  "TriceraTop Spin", "Wildlife Express Train"
+  "TriceraTop Spin"
 )
 service_rates <- c(
   "1800", "1800-2060", "1280-1440", "1800-2000",
-  "3000", "1080-1440", "800-900", "1000-1250"
+  "3000", "1080-1440", "800-900"
 )
 
 knitr::kable(cbind(attractions, service_rates))
