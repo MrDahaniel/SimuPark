@@ -60,8 +60,12 @@ class Person:
     # General functions, used in all scenarios
 
     def report(self):
-        print(f"id: {self.id}  arvTime: {self.arrival_time} things_done: {self.things_done} attrExp: {self.attractions_experienced}")
-        print(f"queues_joined: {self.queues_joined} total_wait_time: {self.total_wait_time} archetype: {self.archetype}" )
+        print(
+            f"id: {self.id}  arvTime: {self.arrival_time} things_done: {self.things_done} attrExp: {self.attractions_experienced}"
+        )
+        print(
+            f"queues_joined: {self.queues_joined} total_wait_time: {self.total_wait_time} archetype: {self.archetype}"
+        )
 
     def do_activity(self, name: str, duration: int):
         # Person does an activity, it gets set to idle while doing so
@@ -135,11 +139,11 @@ class Person:
 
 class DisneyPerson(Person):
     def __init__(
-        self, 
-        id: int, 
-        arrival_time: int, 
-        archetype: Archetype, 
-        park_closing_time: int = None, 
+        self,
+        id: int,
+        arrival_time: int,
+        archetype: Archetype,
+        park_closing_time: int = None,
     ) -> None:
         super().__init__(id, arrival_time, archetype, park_closing_time)
 
@@ -147,14 +151,15 @@ class DisneyPerson(Person):
         self.fastpass_used: int = 0
 
     def choose_what_to_do(
-        self,
-        activities: list[Activity],
-        attractions: list[Attraction],
-        time: int
+        self, activities: list[Activity], attractions: list[Attraction], time: int
     ) -> Union[Activity, Attraction]:
         # First, we need to check for the return window of the fastpass
         if self.fastpass is not None and self.fastpass[1] - time < 5:
-            return [attraction for attraction in attractions if attraction.name == self.fastpass[0]][0]
+            return [
+                attraction
+                for attraction in attractions
+                if attraction.name == self.fastpass[0]
+            ][0]
 
         else:
             # If true, person decides to do an attraction; else it's an activity
@@ -163,16 +168,19 @@ class DisneyPerson(Person):
             else:
                 return self.spin_roulette(activities)
 
-    def check_attraction(self, attraction: Attraction, time_until_closure: int, time: int):
+    def check_attraction(
+        self, attraction: Attraction, time_until_closure: int, time: int
+    ):
 
-        if (self.fastpass is not None 
-            and self.fastpass[0] == attraction.name 
+        if (
+            self.fastpass is not None
+            and self.fastpass[0] == attraction.name
             and self.fastpass[1] - time < 5
         ):
             self.time_left_in_activity = -1
             self.fastpass_used += 1
             self.fastpass = None
-            
+
             self.join_queue(attraction, "DFP")
 
         # Now we check the wait time for the attraction
@@ -180,11 +188,11 @@ class DisneyPerson(Person):
         # their max wait time, they will join the normal queue
         # if the person has fastpass, they check if they still can make it in time
         elif attraction.queue.wait_time <= min(30, self.max_wait):
-            if (
-                self.fastpass is None 
-                or (self.fastpass is not None 
-                    and attraction.queue.wait_time + attraction.duration + 5 < self.fastpass[1] - time)
-                ):
+            if self.fastpass is None or (
+                self.fastpass is not None
+                and attraction.queue.wait_time + attraction.duration + 5
+                < self.fastpass[1] - time
+            ):
                 # We set the time_left_in_activity to -1 to identify as the person
                 # is waiting on queue
                 self.time_left_in_activity = -1
@@ -201,12 +209,42 @@ class DisneyPerson(Person):
         # If the return is false, it means we got no fastpass available
         # The person now checks for the normal queue, if the wait time is lower than the max wait time
         # And the wait time still let's them get in time for their return window
-        elif (
-            attraction.queue.wait_time <= self.max_wait
-        ):
+        elif attraction.queue.wait_time <= self.max_wait:
             if self.fastpass is None or (
-                self.fastpass is not None and attraction.queue.wait_time + 5 < self.fastpass[1] - time
+                self.fastpass is not None
+                and attraction.queue.wait_time + 5 < self.fastpass[1] - time
             ):
                 self.time_left_in_activity = -1
                 self.join_queue(attraction, "NORMAL")
-        
+
+
+class SalitrePerson(Person):
+    def __init__(
+        self,
+        id: int,
+        arrival_time: int,
+        archetype: Archetype,
+        park_closing_time: int = None,
+    ) -> None:
+        super().__init__(id, arrival_time, archetype, park_closing_time)
+
+        self.fastpass: bool = None
+        self.fastpass_used: int = 0
+
+    def report(self):
+        super().report()
+        print(f"fastpass? {self.fastpass}")
+
+    def check_attraction(self, attraction: Attraction):
+        if self.fastpass is True:
+            if attraction.alt_queue.wait_time < min(
+                attraction.queue.wait_time, self.max_wait
+            ):
+                self.fastpass_used += 1
+                self.time_left_in_activity = -1
+                self.join_queue(attraction, "SPF")
+
+        else:
+            if attraction.queue.wait_time < self.max_wait:
+                self.time_left_in_activity = -1
+                self.join_queue(attraction, "NORMAL")

@@ -2,7 +2,7 @@ from math import ceil, gamma
 from random import choice
 from typing import Callable, Tuple, Union
 from unicodedata import name
-from simuPark.person import DisneyPerson, Person, Archetype
+from simuPark.person import DisneyPerson, Person, Archetype, SalitrePerson
 from simuPark.constants import ACTIVITIES, ARCHETYPES, ATTRACTIONS
 from tqdm import tqdm
 import numpy as np
@@ -64,7 +64,7 @@ class FastPassMachine:
             int(service_rate * fastpass_pool_size / 4)
             for _hour in range(hours_open * 4)
         ]
-        self.quarter_handouts: int = [0 for _hour in range(hours_open * 4)]
+        self.quarter_handouts: list[int] = [0 for _hour in range(hours_open * 4)]
 
     def _handout_fastpass(self, person: Person, time: int) -> bool:
         # We calculate the current hour and the minimun return window
@@ -116,13 +116,15 @@ class Attraction(Activity):
         self.queue: Queue = Queue()
         self.fastpass_serve_size: float = fastpass_serve_size
 
+        self.time_until_service: int = duration
+
         self.total_people_served: int = 0
 
         if alt_queue in ["DFP", "SFP"]:
             self.alt_queue: Queue = Queue(type=alt_queue)
+            self.queue: TotalQueue = TotalQueue()
 
             if alt_queue == "DFP":
-                self.queue: TotalQueue = TotalQueue()
                 self.fast_pass_machine: FastPassMachine = FastPassMachine(
                     attraction_name=name,
                     service_rate=service_rate,
@@ -132,12 +134,22 @@ class Attraction(Activity):
 
     def serve(self):
         # We calculate the amount of people the attraction can serve each minute
-        n_people_to_serve = int(np.floor(self.service_rate / 60))
+        n_people_to_serve = int(self.duration * np.floor(self.service_rate / 60))
         # We tell out Queue to serve the amount of people given
         # And the duration of the ride
-        self.total_people_served += self.queue.serve(
-            name=self.name, n_people=n_people_to_serve, duration=self.duration
-        )
+
+        if self.time_until_service != 0:
+            # We decrease time left until the next cycle
+            self.time_until_service -= 1
+
+        elif self.time_until_service == 0:
+            # We reset the time until the next cycle
+            self.time_until_service = self.duration
+
+            # Serve the queue
+            self.total_people_served += self.queue.serve(
+                name=self.name, n_people=n_people_to_serve, duration=self.duration
+            )
 
     def add_to_queue(self, person: Person, queue: str):
         if queue == "NORMAL":
@@ -147,7 +159,7 @@ class Attraction(Activity):
 
     def serve_with_fastpass(self):
         # We calculate the amount of people the attraction can serve each minute
-        n_people_to_serve: int = int(np.floor(self.service_rate / 60))
+        n_people_to_serve: int = int(self.duration * np.floor(self.service_rate / 60))
 
         # Then we calculate the fastpass people to serve,
         n_fastpass_serve: int = int(
@@ -164,16 +176,19 @@ class Attraction(Activity):
         # lane
         n_normal_serve: int = n_people_to_serve - n_fastpass_serve
 
-        # Finally, we make both queues serve the guests
-        self.total_people_served += self.queue.serve(
-            name=self.name, n_people=n_normal_serve, duration=self.duration
-        )
-        self.total_people_served += self.alt_queue.serve(
-            name=self.name, n_people=n_fastpass_serve, duration=self.duration
-        )
+        if self.time_until_service != 0:
+            self.time_until_service -= 1
 
-    def update_fake_wait_time(self):
-        pass
+        elif self.time_until_service == 0:
+            self.time_until_service = self.duration
+
+            # Finally, we make both queues serve the guests
+            self.total_people_served += self.queue.serve(
+                name=self.name, n_people=n_normal_serve, duration=self.duration
+            )
+            self.total_people_served += self.alt_queue.serve(
+                name=self.name, n_people=n_fastpass_serve, duration=self.duration
+            )
 
 
 class Park:
@@ -201,7 +216,6 @@ class Park:
 
     def start_day(self, max_entry_rate: int, wait_time_update: int = 5) -> None:
         # First, we create the guests
-
         self._generate_entry_events(max_entry_rate, self.closing_time)
 
         # Day starts, time starts running minute per minute depending in the
@@ -429,6 +443,107 @@ class DisneyPark(Park):
                         guest.check_attraction(
                             selection, self.closing_time - minute, minute
                         )
+                        # guest.do_activity(selection.name, selection.duration)
+                        # print("Chose attraction")
+                    elif isinstance(selection, Activity):
+                        # print("Chose activity")
+                        guest.do_activity(selection.name, selection.duration)
+
+            self._serve_guests()
+
+    def _serve_guests(self):
+        for attraction in self.attractions:
+            attraction.serve_with_fastpass()
+
+    def _update_wait_times(self):
+        for attraction in self.attractions:
+            whole_queue = attraction.queue.in_queue + attraction.alt_queue.in_queue
+            attraction.queue._update_wait_time(
+                service_rate=attraction.service_rate,
+                whole_queue=whole_queue,
+            )
+            attraction.alt_queue._update_wait_time(service_rate=attraction.service_rate)
+
+
+class SalitrePark(Park):
+    def __init__(
+        self,
+        attraction_dict: dict[str, dict] = ATTRACTIONS,
+        activities_dict: dict[str, dict] = ACTIVITIES,
+        archetype_dict: dict[str, dict] = ARCHETYPES,
+        fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
+        hours_open: int = 16,
+        fastpass_pool_size: float = 0.13,
+    ) -> None:
+        super().__init__(
+            attraction_dict,
+            activities_dict,
+            archetype_dict,
+            fn,
+            hours_open,
+            fastpass_pool_size,
+        )
+
+        self.attractions: list[Attraction] = self._handle_attractions(
+            attraction_dict=attraction_dict,
+            alt_queue="SFP",
+            hours_open=hours_open,
+            fastpass_pool_size=fastpass_pool_size,
+        )
+
+        self.fastpass_pool_size: float = fastpass_pool_size
+
+    def start_day(self, max_entry_rate: int, wait_time_update: int = 5) -> None:
+        # First, we create the guests
+
+        self._generate_entry_events(max_entry_rate, self.closing_time, SalitrePerson)
+
+        # Day starts, time starts running minute per minute depending in the hours open
+        for minute in tqdm(range(self.closing_time)):
+            # Every 5 minutes, all queue times update for the guests to check
+            if minute % wait_time_update == 0:
+                self._update_wait_times()
+
+            for guest in self.guests:
+
+                if minute == 1:
+                    if np.random.uniform(0, 1, 1) <= self.fastpass_pool_size:
+                        guest.fastpass = True
+                    else:
+                        guest.fastpass = False
+
+                # Guest hasn't arrived to the park yet
+                if guest.arrival_time > minute:
+                    continue
+
+                guest.check_leave_park(minute)
+                # print(f"Guest id : {guest.id}")
+                # This case is the 'left the park' state, they're skipped
+                if guest.time_left_in_activity == -2:
+                    # print("left park")
+                    continue
+
+                # In this case, the guest is in a queue, they're are skipped
+                # as they're not able to change selections. TotalWaitTime increases.
+                elif guest.time_left_in_activity == -1:
+                    # print("On queue")
+                    guest.total_wait_time += 1
+
+                # On this case, the guest is currently doing an activity
+                # or riding an attraction. Time passes.
+                elif guest.time_left_in_activity > 0:
+                    # print("Doing activity")
+                    guest.time_left_in_activity -= 1
+
+                # In this scenario, they're looking for something to do
+                # They're free to choose based on their archetype
+                elif guest.time_left_in_activity == 0:
+                    selection = guest.choose_what_to_do(
+                        self.activities, self.attractions
+                    )
+
+                    if isinstance(selection, Attraction):
+                        guest.check_attraction(selection)
                         # guest.do_activity(selection.name, selection.duration)
                         # print("Chose attraction")
                     elif isinstance(selection, Activity):
