@@ -1,5 +1,9 @@
 # **SimuPark: Simulando Un Parque De Diversiones**
 
+- Paula Catalina Hernández Ramírez 2180048 - Moderador
+- Juan Pablo Claro Pérez - 2181707 - Relator
+- Daniel David Delgado Cervantes - 2182066 - Expositor
+
 ## **Resumen**
 
 El presente documento examina una problemática que se presenta en cualquier lugar donde se encuentre una cantidad excesiva de personas y haya la necesidad de hacer filas. La teoría de colas es un estudio matemático que busca entender el comportamiento de las líneas de espera dentro de un sistema, donde el cliente presenta una solicitud para que se le presten un servicio y este a su vez dependerá de una variante, la demanda, ya que con esta se determina el tiempo de espera que debe tener la persona hasta obtener lo que requiere. El ecosistema a estudiar se presenta dentro
@@ -32,7 +36,7 @@ Partiendo de esto, el problema que se busca solucionar son estas mismas colas, y
 -   Determinar qué estrategia conlleva la mayor reducción del tiempo de espera en las colas del parque.
 -   Identificar los diferentes factores que se relacionan con el tiempo de espera promedio de cada una de las atracciones del parque.
 -   Determinar las diferentes limitaciones que presenta el parque en cuanto el manejo de las colas de cada una de sus atracciones.
--   Analizar qué tanto se puede incrementar el flujo de visitantes a un parque de diversiones y si la cantidad de atracciones en las que se subieron aumentó con un cambio de estrategia FastPass.
+-   Analizar qué tanto se puede incrementar el flujo de visitantes a un parque de diversiones y si la cantidad de atracciones en las que se subieron aumentó con un cambio de estrategia _FastPass_.
 
 ## **Conceptualización del modelo**
 
@@ -58,7 +62,7 @@ A su vez se desea comparar este modelo tradicional del funcionamiento de los par
   <img src="https://imgur.com/uJwzvGn.png" />
 </p>
 
-Otro modelo de comparación es el empleado en los parques de diversiones de Disney donde presentan una facilidad llamada FastPass donde la persona que presenta el FastPass debe presentarse frente a la atracción a la hora especificada en el comprobante, esto con el fin de que la persona no realice filas sino que ingrese directamente a la atracción o actividad, de lo contrario decidirá si quiere unirse a la fila, comprar un FastPass para la atracción o realizar otra actividad, teniendo como resultado el siguiente flujo:
+Otro modelo de comparación es el empleado en los parques de diversiones de Disney donde presentan una facilidad llamada _FastPass_ donde la persona que presenta el _FastPass_ debe presentarse frente a la atracción a la hora especificada en el comprobante, esto con el fin de que la persona no realice filas sino que ingrese directamente a la atracción o actividad, de lo contrario decidirá si quiere unirse a la fila, comprar un _FastPass_ para la atracción o realizar otra actividad, teniendo como resultado el siguiente flujo:
 
 <p align="center">
   <img src="https://imgur.com/LNKBfEc.png" />
@@ -219,10 +223,6 @@ reps$porcentaje <- cbind(t_espera)
 knitr::kable(reps)
 ```
 
-```{r}
-c(53, 9, 4)
-```
-
 Apliquemos este mismo proceso para determinar los tiempos de estadía dentro del parque.
 
 ```{r}
@@ -241,10 +241,6 @@ for (i in 1:nrow(reps)) {
 }
 
 reps$porcentaje <- cbind(t_espera)
-```
-
-```{r}
-c(48, 30, 4)
 ```
 
 ```{r, echo=FALSE}
@@ -273,8 +269,82 @@ reps$porcentaje <- cbind(t_espera)
 knitr::kable(reps)
 ```
 
+A apartir de estos datos, se llegó a la determinación de lo siguientes arquetipos con los cuales se trabajará durante la simulación. Estos se encuentran en `constants.py` que es el que se encarga del manejo de esos datos.
+
+```py
+ARCHETYPES = {
+    "Tourist": {
+        "AttractionPercentage": 0.6,
+        "MinStayTime": 4 * 60,
+        "MaxStayTime": 8 * 60,
+        "WaitTime": 60,
+    },
+    "Average": {
+        "AttractionPercentage": 0.5,
+        "MinStayTime": 4 * 60,
+        "MaxStayTime": 8 * 60,
+        "WaitTime": 50,
+    },
+    "Activity Enjoyer": {
+        "AttractionPercentage": 0.2666667,
+        "MinStayTime": 1 * 60,
+        "MaxStayTime": 5 * 60,
+        "WaitTime": 10,
+    },
+    "Attraction Enjoyer": {
+        "AttractionPercentage": 0.7407407,
+        "MinStayTime": 4 * 60,
+        "MaxStayTime": 9 * 60,
+        "WaitTime": 70,
+    },
+    "All Day Guest": {
+        "AttractionPercentage": 0.6,
+        "MinStayTime": 8 * 60,
+        "MaxStayTime": 12 * 60,
+        "WaitTime": 40,
+    },
+    "Relaxed Visitor": {
+        "AttractionPercentage": 0.4,
+        "MinStayTime": 3 * 60,
+        "MaxStayTime": 6 * 60,
+        "WaitTime": 25,
+    },
+}
+```
+
+#### **Compras Del _FastPass_ de Salitre**
+
+Ahora, lo último que nos queda en término del tratamiento de datos respecto a los datos recolectados en la encuesta, está en determinar el porcentaje de personas que pagarían el costo extra del _FastPass_ para el escenario de Salitre. En este sentido, se definirá el porcentaje de personas que estarían dispuestas a pagar un precio en especial. 
+
+Tomemos la cantidad de personas por cada uno de los precios que se definieron en la encuesta: 
+
 ```{r}
-c(16, 47, 20)
+# Traemos la columna relacionada
+fastpass_df <- forms_df[9]
+
+
+no_compra <- length(fastpass_df[fastpass_df == "Ninguna de las anteriores"])
+p1030 <- length(fastpass_df[fastpass_df == "$10.000-$30.000"])
+p3050 <- length(fastpass_df[fastpass_df == "$30.000-$50.000"])
+p50p <- length(fastpass_df[fastpass_df == "Mas de $50.000"])
+```
+
+```{r, echo=FALSE}
+categoria <- c(
+  "Ninguna de las anteriores", "Entre $10.000 y $30.000",
+  "Entre $30.000 y $50.000", "Mas de $50.000"
+)
+total <- no_compra + p1030 + p3050 + p50p
+frecuencia <- c(no_compra, p1030, p3050, p50p)
+porcentaje <- frecuencia / total
+porcentaje_compra <- c(sum(porcentaje[c(4, 3, 2, 1)]), sum(porcentaje[c(4, 3, 2)]), sum(porcentaje[c(4, 3)]), sum(porcentaje[c(4)]))
+
+knitr::kable(cbind(
+  categoria,
+  frecuencia,
+  porcentaje,
+  porcentaje_compra
+))
 ```
 
 #### **La Popularidad, Duración Y La Tasa De Servicio De Las Atracciones**
@@ -315,22 +385,275 @@ popularity <- c(
   33 * 1800, 26 * 1800, 98 * 1280, 29 * 1800, 48 * 3000, 70 * 1080, 15 * 800
 )
 
-knitr::kable(cbind(attractions, service_rates, duration, reported_wait_times, popularity))
+knitr::kable(
+  cbind(attractions, service_rates, duration, reported_wait_times, popularity)
+)
 ```
-
+   
 En el momento de realizar la elección de que atracción será para la cual hará fila, se calcula el porcentaje de popularidad que representa el términos generales cada una de las atracciones.
 
 ### **Implementación De La Simulación**
 
-Para el desarrollo del prototipo para la simulación, esta se 
+Para el desarrollo del prototipo para la simulación, se partió de lo que se definió inicialmente durante la fase de la conceptualización del modelo. Siendo así, tenemos los siguientes módulos:
 
-### **Simulando El Parque**
+El primero de estos es el módulo de `Park`, de manera general, este es nuestro componente principal pues engloba en si todos los demás componentes de la simulación. Hay que resaltar que, además de manejar la creación y menejo de los arquetipos, atracciones y actividades; este se encarga de como tal realizar la simulación del parque con el uso de la función `Park.start_day(self, max_entry_rate, wait_time_update)`.
+
+```py
+class Park:
+    def __init__(
+        self,
+        attraction_dict: dict[str, dict] = ATTRACTIONS,
+        activities_dict: dict[str, dict] = ACTIVITIES,
+        archetype_dict: dict[str, dict] = ARCHETYPES,
+        fn: Callable[[float], float] = lambda x, k: k ** x * np.exp(-k) / gamma(x + 1),
+        hours_open: int = 16,
+        fastpass_pool_size: float = 0.3,
+    ) -> None:
+        self.current_time: int = 0
+        self.closing_time: int = 60 * hours_open
+        self.attractions: list[Attraction] = self._handle_attractions(
+            attraction_dict=attraction_dict,
+            alt_queue=None,
+            hours_open=hours_open,
+            fastpass_pool_size=fastpass_pool_size,
+        )
+        self.activities: list[Activity] = self._handle_activities(activities_dict)
+        self.guest_archetypes: list[Archetype] = self._handle_archetypes(archetype_dict)
+        self.guests: list[Union[Person, DisneyPerson]] = []
+        self.function: Callable[[float], float] = fn
+```
+
+Así mismo, es a partir de la herencia de `Park` por el cual se realizan las diferentes implementaciones de nuestros diferentes casos alternos. En estos casos, los cambios más relevantes están principalmente en la función `start_day` al igual que algunas de las funciones auxiliares como `Park._update_fake_wait_time(self)` la cual varía en cada una de las implementaciones.
+
+De manera un poco más interna, se implementaron los componenetes de `Activity` y `Attraction`. Estos, en especial `Attraction`, son los encargados del manejo de sus filas, al igual que el atender a las personas que las visitan. 
+
+```py
+class Activity:
+    def __init__(self, name: str, popularity: int, duration: int) -> None:
+        self.name: str = name
+        self.duration: int = duration
+        self.popularity: int = popularity
+
+
+class Attraction(Activity):
+    def __init__(
+        self,
+        name: str,
+        popularity: int,
+        duration: int,
+        service_rate: int,
+        alt_queue: str = None,
+        hours_open: int = 16,
+        fastpass_pool_size: float = 0.3,
+        fastpass_serve_size: float = 0.6,
+    ) -> None:
+        super().__init__(name, popularity, duration)
+        self.service_rate: int = service_rate
+        self.fake_wait_time: int = 0
+        self.queue: Queue = Queue()
+        self.fastpass_serve_size: float = fastpass_serve_size
+
+        self.time_until_service: int = duration
+
+        self.total_people_served: int = 0
+
+        if alt_queue in ["DFP", "SFP"]:
+            self.alt_queue: Queue = Queue(type=alt_queue)
+            self.queue: TotalQueue = TotalQueue()
+
+            if alt_queue == "DFP":
+                self.fast_pass_machine: FastPassMachine = FastPassMachine(
+                    attraction_name=name,
+                    service_rate=service_rate,
+                    hours_open=hours_open,
+                    fastpass_pool_size=fastpass_pool_size,
+                )
+```
+
+La creación de instancias de estos módulos durante la simulación viene dada desde el parque. Las funciones más importantes dentro de `Attraction` es la función `Attraction.serve(self)` y `Attraction.serve_with_fastpass(self)` debido a que estas son las encargadas de llamar a las filas para que atiendan a las peronas presentes en las filas.
+
+En cuanto a las visitantes del parque, se implementó el módulo `Person`, el cual se encarga del manejo tanto de las caracterísitcas de las personas al igual que el comportamiento de las mismas en el momento de decir que harán en cuanto a atracciones y actividade y el cuanto están dispuestas a esperar en una fila. 
+
+```py
+class Person:
+    def __init__(
+        self,
+        id: int,
+        arrival_time: int,
+        archetype: Archetype,
+        park_closing_time: int = None,
+    ) -> None:
+        # General info
+        self.id: str = id
+        self.time_left_in_activity: int = 0
+        self.current_activity: str = None
+
+        # Used for statistics
+        self.attractions_experienced: int = 0
+        self.total_wait_time: int = 0
+        self.arrival_time: int = arrival_time
+        self.things_done: list[str] = []
+        self.queues_joined: int = 0
+
+        # Archetype defined
+        self.archetype: str = archetype.name
+        self.departure_time: int = (
+            randint(archetype.min_stay, archetype.max_stay) + arrival_time
+        )
+        self.max_wait: int = randint(archetype.min_wait_time, archetype.max_wait_time)
+        self.attraction_chance: float = archetype.attraction_chance
+
+        # Handle time after park closes
+        if park_closing_time is not None and park_closing_time < self.departure_time:
+            self.departure_time = park_closing_time
+```
+
+Para cada una de las implementaciones alternas que se realizaron, se creó a partir de herencia un tipo de persona específico para cada uno de los diferentes escenarios. Esto se debe principalmente a que el comportamiento de las personas dentro del parque cambiaba dependiendo del escenario que se estaba trabajando. Siendo así, la función principal de `Person` sería `Person.check_attraction` pues es la que define el comportamiento de las personas dentro del parque en altera la manera de decidir sobre si espera o no en una fila.
+
+### **Diseño Experimental**
+
+Durante el desarrollo de la simulación se identificaron una serie de tres alternativas, para ser comparadas con el caso base. Los cuatro escenarios a simular cuentan con estas características en común: la persona que ingrese al parque podrá escoger entre actividad (acción para la cual no necesita hacer ninguna fila),  o atracción (acción para la que tendrá un tiempo de espera y por lo tanto tendrá que hacer fila). Y si la persona se decide por una atracción, será su arquetipo, es decir una serie de datos que determinarán su decisión, el que indicará si la persona escoge hacer fila por esa atracción o si mejor toma otra decisión (actividad o atracción).
+
+Sintetizando, son cuatro escenarios en total los que se pondrán a prueba en la simulación (contando el caso base). Se describen a continuación:
+
+Caso Base: En este escenario la persona ingresará al parque y tendrá la opción de escoger entre una actividad que podrá hacer inmediatamente, o una atracción para la que deberá esperar haciendo fila. Este sería el caso con el que cuenta un parque de atracciones sin implementar algún tipo de ticket especial o preferencial, que tendrá un mayor costo para el visitante y que en nuestro artículo se ha decicido nombrar como *'fast pass'*.
+
+Caso _FastPass_ Disney: En este escenario la persona ingresará al parque y tendrá la opción de realizar una actividad que al igual que en el caso base y en los demás, podrá hacer al instante, o podrá escoger una atracción. En caso de escoger la atracción pueden ocurrir dos situaciones, que la persona posea _FastPass_ para cierta hora, es decir, a determinada hora del día pueda pasar sin hacer fila, o podrá no tener _FastPass_ y según si quiere esperar haciendo fila o no (dependiendo de su arquetipo), podrá subirse a la atracción que escogió. Para el caso _FastPass_ se decidió que de las personas que llegaran al parque solo el 30% pudieran adquirir un _FastPass_.
+
+Caso _FastPass_ Salitre: En este escenario la persona ingresará al parque y tendrá que escoger entre actividades y atracciones. La diferencia radica en que el _FastPass_ de Salitre es un ticket cuyo precio es mayor al normal, y le permite a la persona ingresar a una fila virtual para omitir la normal, y así poder disminuir su tiempo de espera en cola.
+
+Caso Tiempos Falsos: En este escenario a simular las personas siguen el mismo comportamiento que tendrían en el caso base. La diferencia se encuentra en que los tiempos de espera mostrados a la persona que escoge cierta atracción, estarán aumentados según el rango de tiempo en el que se halle el tiempo de espera de tal atracción, con el fin de disuadir a las personas de hacer la fila y así reducir los tiempos de colas para las atracciones.
+
+
+### **Resultados de la Simulación**
+
+Para tratar de tener varios días de cada parque, se simularon un totol de 7 días para cada unode los escenarios los cuales trabajaron. Esto se realizó con el fin de tratar de tener varios días con los que trabajar en cuanto al análisis de resultados. En total, esto nos dió un total de alrededor de 800000 registros en total, aproximadamente 200000 para cada una de los casos trabajados. El reportar estos datos en una tabla para poder sacar conclusiones, aunque posible, es realmente complicado pues no es la mejor manera de condensar los datos.
+
+Siendo así, empecemos revisando los tiempos de espera promedio de cada una de los escenarios.
+
+#### **Tiempos De Espera**
+
+```{r}
+base_df <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/BASE.csv")
+dfp_df <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/DFP.csv")
+sfp_df <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/SFP.csv")
+ftp_df <- read.csv("https://gitlab.com/MrDahaniel/proyecto-simulacion/-/raw/main/datasets/FTP.csv")
+```
+
+```{r, echo=FALSE}
+print("Caso Base")
+knitr::kable(head(base_df))
+print("Disney FastPass")
+knitr::kable(head(dfp_df))
+print("Salitre FastPass")
+knitr::kable(head(sfp_df))
+print("Tiempos Falsos")
+knitr::kable(head(ftp_df))
+```
+
+Ya con los datos cargados, miremos los tiempos de espera promedio para aquellas personas que pudieron subirse aunque sea a una atracción. En el caso de no tener esta consideración, estaríamos añadiendo datos que no deberíamos considerar a los resultados.
+
+```{r, echo=FALSE}
+print(paste("Promedio tiempo de espera (Caso Base)", mean(base_df$average_wait_time[base_df$attractions_experienced != 0])))
+print(paste("Promedio tiempo de espera (Disney FastPass)", mean(dfp_df$average_wait_time[dfp_df$attractions_experienced != 0])))
+print(paste("Promedio tiempo de espera (Salite FastPass)", mean(sfp_df$average_wait_time[sfp_df$attractions_experienced != 0])))
+print(paste("Promedio tiempo de espera (Tiempos Falsos)", mean(ftp_df$average_wait_time[ftp_df$attractions_experienced != 0])))
+```
+
+Veamos de manera gráfica la distribución de estos tiepos de espera.
+
+```{r, echo=FALSE, fig.align='center', fig.width=10, fig.height=7}
+par(mfrow = c(2, 2))
+hist(base_df$average_wait_time[base_df$attractions_experienced != 0], main = "Caso Base", xlab = "Tiempo Espera Promedio")
+hist(dfp_df$average_wait_time[dfp_df$attractions_experienced != 0], main = "Disney FastPass", xlab = "Tiempo Espera Promedio")
+hist(sfp_df$average_wait_time[sfp_df$attractions_experienced != 0], main = "Salitre FastPass", xlab = "Tiempo Espera Promedio")
+hist(ftp_df$average_wait_time[ftp_df$attractions_experienced != 0], main = "Tiempos Falsos", xlab = "Tiempo Espera Promedio")
+```
+
+De aquí podemos ver el como se comporta de manera general cada una de las implementaciones en cuanto el como altera las distribuciones de estos tiempos de espera.
+
+#### **Subidas A Atracciones**
+
+Repitamos el mismo proceso anterior pero para la cantidad promedio de veces que los visitantes del parque pudieron subierse a las atracciones.
+
+```{r, echo = FALSE}
+print(paste("Promedio atracciones subidas (Caso Base)", mean(base_df$attractions_experienced)))
+print(paste("Promedio atracciones subidas (Disney FastPass)", mean(dfp_df$attractions_experienced)))
+print(paste("Promedio atracciones subidas (Salite FastPass)", mean(sfp_df$attractions_experienced)))
+print(paste("Promedio atracciones subidas (Tiempos Falsos)", mean(ftp_df$attractions_experienced)))
+```
+
+De manera gráfica, podemos apreciar la distribución de estos datos.
+
+```{r, echo=FALSE, fig.align='center', fig.width=10, fig.height=7}
+par(mfrow = c(2, 2))
+hist(base_df$attractions_experienced, main = "Caso Base", xlab = "Subidas a las Atraciones")
+hist(dfp_df$attractions_experienced, main = "Disney FastPass", xlab = "Subidas a las Atraciones")
+hist(sfp_df$attractions_experienced, main = "Salitre FastPass", xlab = "Subidas a las Atraciones")
+hist(ftp_df$attractions_experienced, main = "Tiempos Falsos", xlab = "Subidas a las Atraciones")
+```
+
+Veamos revisemos la cantidad de personas para cada uno de los escenarios que no pudieron subierse a ninguna atracción:
+
+```{r, echo=FALSE}
+print(paste("Personas sin subirse (Caso Base)", length(base_df$attractions_experienced[base_df$attractions_experienced == 0]) / 7))
+print(paste("Personas sin subirse (Disney FastPass)", length(dfp_df$attractions_experienced[dfp_df$attractions_experienced == 0]) / 7))
+print(paste("Personas sin subirse (Salitre FastPass)", length(sfp_df$attractions_experienced[sfp_df$attractions_experienced == 0]) / 7))
+print(paste("Personas sin subirse (Tiempos Falsos)", length(ftp_df$attractions_experienced[ftp_df$attractions_experienced == 0]) / 7))
+```
+
+Y la cantidad de personas que pudieron subierse a al menos una atracción:
+
+```{r, echo=FALSE}
+print(paste("Personas que pudieron subirse (Caso Base)", length(base_df$attractions_experienced[base_df$attractions_experienced != 0]) / 7))
+print(paste("Personas que pudieron (Disney FastPass)", length(dfp_df$attractions_experienced[dfp_df$attractions_experienced != 0]) / 7))
+print(paste("Personas que pudieron (Salitre FastPass)", length(sfp_df$attractions_experienced[sfp_df$attractions_experienced != 0]) / 7))
+print(paste("Personas que pudieron (Tiempos Falsos)", length(ftp_df$attractions_experienced[ftp_df$attractions_experienced != 0]) / 7))
+```
+
+
 
 ### **Análisis De Los Resultados**
 
+Procesando los diferentes resultados arrojados por las simulaciones realizadas donde se emplearon diferentes técnicas para obtener lectura de reducción o mejora de los tiempos de espera, se observaron datos bastante cercanos entre cada una de las lecturas.
+
+ Se realiza una comparación frente a cada caso evaluado teniendo en cuenta el estudio realizado a un sistema de parque de diversiones que no presente ninguna de las alternativas nombradas en secciones anteriores, ya que en ello se basará la observación de una mejora significativa al momento de emplear los distintos modelos. Se tendrá en consideración que cada simulación se realizará con un máximo de 95.000 / 960 personas es decir más o menos 100 personas por cada 5 minutos transcurridos dentro de la simulación, esto es decir entre 37.000 y 39.000 personas en el parque por un día.
+
+Se iniciará con la comparación de la simulación del _FastPass_ de Disney con el presente caso base, donde se observa un notorio cambio presente en las personas que no pudieron disfrutar de una atracción del parque, visualizando que entre el _FastPass_ de Disney y el caso base de un parque se tiene la diferencia de 3007 personas que pudieron disfrutar de al menos una atracción en los parques de Disney. Teniendo esto en consideración se evidencia un claro aumento en el promedio de atracciones que fueron experimentadas por los distintos usuarios que visitan al parque. Esto puede visualizarse en las gráficas presentes en la sección de resultados de la simulación dedonde se puede observar con mayor detalle.
+
+Los tiempos de espera entre cada una de las filas de las atracciones también se vieron afectados, ya que con la implementación del _FastPass_ las personas podían disfrutar de la atracción el tiempo correspondido, haciendo que el número total de personas que no presentaron demoras en el ingreso a las distintas atracciones aumentará en comparación al modelo del parque tradicional.
+
+Cabe resaltar que existe un ligero aumento entre los tiempos de espera de cada atracción ya que las personas que presentan la facilidad de _FastPass_ únicamente pueden saltarse la fila de la atracción deseada en un tiempo especifico haciendo que esta pueda elegir entre hacer una fila distinta para otra atracción mientras llega su turno o elegir una de las diferentes actividades a realizar en el parque.
+
+Realizando la comparativa con la alternativa presentada por el SalitrePass contra los resultados obtenidos en el estudio del parque tradicional obtenemos una lectura con cambios perceptibles, teniendo en consideración el numero de personas que no han logrado disfrutar de una atracción dentro del parque presenta una diferencia de 1259 personas, aumentando el numero de personas que al menos disfrutaron de una atracción. Los tiempos de espera promedio también se vieron afectados ya que al tener el SalitrePass la persona puede saltarse la fila convencional e ingresar a una fila especial presentada por la misma alternativa, este presente caso puede presentar algunas averías dependiendo la cantidad de personas que presenten el SalitrePass ya que las filas pueden llegar a ser mucho mas extensas que las convencionales. 
+
+Teniendo esto presente se observa que los tiempos de espera promedio han aumentado un aproximadamente un 15% pero se debe resaltar que las personas que no han presentado tiempo de espera son mucho mayores en el caso que presenta la alternativa del SalitrePass en comparación al parque tradicional.
+El tiempo de espera máximo por atracción se observa con ligeros cambios donde los tiempos de cada atracción han aumentado en el caso presente del SalitrePass.
+
+Tomando en consideración los datos obtenidos para el análisis del caso de tiempos falsos contra los resultados presentes en la simulación de un parque tradicional se presenta que la cantidad de personas que no han ingresado a una atracción es mucho mayor que la presente en el caso base, partiendo de esto se encuentra una diferencia de 557 personas que no pudieron ingresar a una atracción más que en el caso tradicional.
+
+Cabe resaltar que los tiempos de espera presentes en el caso de tiempos falsos es mucho menos que el presente en el caso base, esto se debe a que, al presentar un tiempo mayor al tiempo real establecido para el ingreso a la atracción, las personas evitan emplear el tiempo presente en esperar y desean realizar cualquier otra actividad, esto hace que los tiempos de espera entre cada una de las atracciones sea menor y por lo tanto la media de ellas será inferior.
+
+Estableciendo una comparativa entre las diferentes alternativa presentes en el estudio de parques de atracciones se pueden obtener lectura presente de una notoria diferencia entre ellas; La alternativa presentada por el SalitrePass un tiempo de espera mas bajo que los presentados por el _FastPass_ de Disney, esto debido a la capacidad que este presenta a la hora de ingresar a una atracción, pero cabe resaltar que al tener un tiempo de espera bajo la diferencia de promedio presente entre ambas es de 6.05 minutos aproximadamente, donde claramente el _FastPass_ de Disney presenta las mejores lecturas.
+
+Hablando sobre los resultados presente en el estudio de tiempos falsos se presenta que tiene lecturas que compiten con los tiempos presentes en el SalitrePass y el _FastPass_ de Disney presentando una diferencia de 13.248 y 7.202 minutos respectivamente, pero se debe resaltar que la alternativa de tiempos falsos juega un papel sobre las personas que no presentan mayor tiempo de espera al presente en la atracción, por ello si la persona no realiza la cola los tiempos disminuyen pero un mayor número de personas no querrá ingresar a una atracción en dicho parque.
+
+
 ## **Conclusiones**
 
+-	Observando los diferentes resultados obtenidos con cada uno de los casos estudiados en las simulaciones presentadas se puede concluir que las diferentes alternativas pueden ayudar a la reducción de los tiempos de espera presentes en cada parque de diversiones hasta el punto de poder combinar varias alternativas para así mejorar los tiempos de estas.
+
+-	La alternativa que con lleva a la mayor reducción del tiempo de espera presente en cada atracción es el caso de tiempos falsos, aunque presenta un inconveniente ya que dependiendo el nivel de espera que tiene la persona se puede obtener resultados variados en cada estudio.
+
+-	La mayor de las limitaciones presente con la alternativa de SalitrePass y tiempos falsos es que al presentar muchas personas que adquieran el SalitrePass o tengan la paciencia de esperar a los tiempos falsos se vuelven ineficientes al momento de emplearlas y pasarían a ser una cola similar a la tradicional.
 
 ## **Referencias**
 
-- https://touringplans.com/animal-kingdom/attractions/duration#
+-   Predecir los tiempos de espera de Disneyland a través de simulaciones de población. (s.f.). Ichi Pro. Disponible [aquí](https://ichi.pro/es/predecir-los-tiempos-de-espera-de-disneyland-a-traves-de-simulaciones-de-poblacion-36233626878710).
+-   Datos sobre tiempos de espera en parque de diversiones. (s.f.). Minitab. Disponible [aquí](https://support.minitab.com/es-mx/datasets/quality-tools-data-sets/amusement-park-wait-times/).
+-   Disney World Wait Times Available for Data Science and Machine Learning. (s.f.). touringplans. Disponible [aquí](https://touringplans.com/blog/disney-world-wait-times-available-for-data-science-and-machine-learning/).
+-   Análisis De Líneas De Espera A Través De Teoría De Colas Y Simulación. (2010). Portilla, L. et al.
+-   Managing Capacity And Flow At Theme Parks. (1996). Reza H. Ahmadi.
+- Duración de las atracciones en Animal Kingdom. (s.f.). Disponible [aquí](https://touringplans.com/animal-kingdom/attractions/duration#).
+- Tasa de Servicio de Animal Kingdom. Disponible [aquí](https://wdwthemeparks.com/hourly-capacity-numbers/).
+- Tiempos de Espera en Animal Kingdom. Disponible [aquí](https://www.thrill-data.com/waits/park/wdw/animal-kingdom/).

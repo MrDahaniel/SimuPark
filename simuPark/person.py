@@ -36,7 +36,7 @@ class Person:
         # General info
         self.id: str = id
         self.time_left_in_activity: int = 0
-        self.current_activity: str = ""
+        self.current_activity: str = None
 
         # Used for statistics
         self.attractions_experienced: int = 0
