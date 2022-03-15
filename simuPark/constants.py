@@ -54,37 +54,37 @@ ACTIVITIES = {
 
 ATTRACTIONS = {
     "DINOSAUR": {
-        "Duration": 6,
+        "Duration": 4,
         "Popularity": 33 * 1800,
         "ServiceRate": 1800,
     },
     "Expedition Everest": {
-        "Duration": 5,
+        "Duration": 4,
         "Popularity": 26 * 1800,
         "ServiceRate": 1800,
     },
     "Flight of Passage": {
-        "Duration": 5,
+        "Duration": 6,
         "Popularity": 98 * 1280,
         "ServiceRate": 1280,
     },
     "Kali River Rapids": {
-        "Duration": 5,
+        "Duration": 10,
         "Popularity": 29 * 1800,
         "ServiceRate": 1800,
     },
     "Kilimanjaro Safaris": {
-        "Duration": 3,
+        "Duration": 20,
         "Popularity": 48 * 3000,
         "ServiceRate": 3000,
     },
-    "Na’vi River Journey": {
-        "Duration": 3,
+    "Na'vi River Journey": {
+        "Duration": 5,
         "Popularity": 70 * 1080,
         "ServiceRate": 1080,
     },
     "TriceraTop Spin": {
-        "Duration": 5,
+        "Duration": 2,
         "Popularity": 15 * 800,
         "ServiceRate": 800,
     },
