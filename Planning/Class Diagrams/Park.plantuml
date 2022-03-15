@@ -4,43 +4,55 @@
 
      ' skinparam style strictuml
      skinparam defaultTextAlignment center
+     left to right direction
 
      ' Class Declaration
      class Person {
           ' Variables
           +id: int
-          +name: str
-          +attractionsExperienced: int
-          +totalWaitTime: int
-          +arrivalTime: int
-          +departureTime: int
-          +timeLeftInActivity: int
-          +currentActivity: str
+          +time_left_in_activity: int
+          +current_activity: str
+          +attractions_experienced: int
+          +total_wait_time: int
+          +arrival_time: int
+          +things_done: list[str]
+          +queues_joined: int
           +archetype: str
-          +bulkTime: int
-          +attractionChance: float
-          +thingsDone: list[str]
+          +departure_time: int
+          +max_wait: int
+          +attraction_chance: float
 
 
           ' Methods
-          +doActivity(self, name: str, duration: int)
-          +rideAttraction(self, name: str, duration: int)
-          +chooseWhatToDo(self, activities: list[Activity], attraction: list[Attraction])
-          +flipCoin(self, Park: Park): list[Activity]
-          +spinRoulette(self, locations: list[Activity]): Activity
-          +checkAttraction(self, Activity): None
-          +joinQueue(self, Activity): None
-          +leavePark(self): None
+          +report(self)
+          +do_activity(self, name: str, duration: int)
+          +ride_attraction(self, name: str, duration: int)
+          +choose_what_to_do(self, activities: list[Activity], attraction: list[Attraction])
+          +flip_weighted_coin(self, Park: Park): list[Activity]
+          +spin_roulette(self, locations: list[Activity]): Activity
+          +check_attraction(self, Activity): None
+          +join_queue(self, Activity): None
+          +check_leave_park(self): None
+     }
+
+     class DisneyPerson {
+          + fastpass: Union[tuple[str, int], None]
+          + fastpass_used: int
+     }
+
+     class SalitrePerson {
+          + fastpass: bool
+          + fastpass_used: int
      }
 
      class Archetype {
           ' Variables
           +name: str
-          +maxWaitTime: int
-          +minWaitTime: int
-          +maxStay: int
-          +minStay: int
-          +attractionChance: float
+          +max_wait_time: int
+          +min_wait_time: int
+          +max_stay: int
+          +min_stay: int
+          +attraction_chance: float
 
           ' Methods
 
@@ -50,32 +62,60 @@
           ' Variables
           +name: str
           +duration: int
+          +popularity: int
 
      }
 
      class Attraction {
           ' Variables
+          +service_rate: int
+          +fake_wait_time: int
+          +queue: Queue
+          +alt_queue: Queue
+          +fastpass_serve_size: float
           +popularity: int
-          +hourlyServiceRate: int
-          +fakeWaitTime: int
+          +time_until_service: int
+          +total_people_served: int
+
           ' Methods
           
-          +updateWaitTime(self)
-          +updateFakeWaitTime(self)
+          +serve(self)
+          +serve_with_fastpass(self)
+          +add_to_queue(self, person: Person, queue: str)
      }
 
      class Park {
           ' Variables
-          +name: str
-          +time: int
-          +closingTime: int
-          +visitors: list[People]
+          +current_time: int
+          +closing_time: int
           +attractions: list[Attraction]
           +activities: list[Activity]
+          +guest_archetypes: list[Archetype]
+          +guests: list[People]
+          +function: Callable[[float], float]
 
           ' Methods
-          +startDay(self, totalVisitors: int)
-          +receiveVisitors(self)
+          +start_day(self, totalVisitors: int)
+          +_handle_archetypes(self, archetype_dict: dict[str, dict])
+          +_handle_activities(self, activity_dict: dict[str, dict])
+          +_handle_attractions(self, attraction_dict: dict[str, dict], alt_queue: str, hours_open: int, fastpass_pool_size: float)
+          +_generate_entry_events(self, max_entry_rate: int, park_closing_time: int, personClass: Union[Person, DisneyPerson, SalitrePerson])
+          +_update_wait_times(self)
+          +_serve_guests(self)
+     }
+
+     class DisneyPark {
+          +start_day(self, max_entry_rate: int, wait_time_update: int = 5)
+          +_serve_guests(self)
+          +_update_wait_times(self)
+     }
+
+     class SalitePark {
+          +self.fastpass_pool_size: float
+
+          +start_day(self, max_entry_rate: int, wait_time_update: int = 5)
+          +_serve_guests(self)
+          +_update_wait_times(self)
      }
 
      class Queue {
@@ -89,11 +129,24 @@
           +addToQueue(self, person: Person)
      }
 
+     class FastPassMachine {
+          self.attraction: str
+          self.fastpass_pool: int
+          self.quarter_handouts: list[int]
+
+          _handout_fastpass(self, person: Person, time: int)
+     }
+
      ' Relationships
      Park *.right. Activity : Park has \nmany Activities
+     Park <|-- DisneyPark
+     Park <|-- SalitePark
      Activity <|-- Attraction : Attractions are \nactivities with a queue
+     Attraction *.left. FastPassMachine: Attractions \nhave Fastpass Machines
      Person -left-  Activity : A Person \ndoes activities
      Person -- Archetype : Person is defined by \nan Archetype
-     Attraction *-left- Queue : An attraction\n has queues
+     Person <|-- DisneyPerson
+     Person <|-- SalitrePerson
+     Attraction *-right- Queue : An attraction\n has queues
 
 @enduml

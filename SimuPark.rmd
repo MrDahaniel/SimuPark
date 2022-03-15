@@ -39,7 +39,7 @@ Partiendo de esto, el problema que se busca solucionar son estas mismas colas, y
 El modelo empleado como punto de partida en el estudio de la simulación del comportamiento de las colas de espera presentadas en un parque de atracciones se puede ver simplificado en el siguiente diseño, el cual cuenta con ciertos componentes en los que se involucra la conducta o 'arquetipo' de cada persona a la hora de recurrir a las diferentes atracciones, las actividades que la persona podría elegir, las atracciones, y muchas más variables que influirán en la ejecución de la simulación:
 
 <p align="center">
-  <img src="https://imgur.com/D80tmov.png" />
+  <img src="https://imgur.com/hfCMmYT.png" />
 </p>
 
 Se inicia con el estudio de las diferentes personas, sus gustos y arquetipos para obtener una lectura que permita crear un mapa global de cada una de las distintas opciones que puede elegir las personas, tomando el arquetipo como punto de partida para obtener los gustos que pueden presentar los visitantes en el modelo.
@@ -144,7 +144,7 @@ curve(model_fn(x, lm_model$coefficients), from = 0, to = 16, add = TRUE)
 
 Será a partir de este modelo por el cual se definirá la entrada de las personas al parque. Esto tiene una gran importancia pues es a partir de esto que se definirá tanto la cantidad de visitantes al parque como el estos van llegando.
 
-#### **Definiendo Los Arquetipos De Los Visitantes**
+#### **Definiendo Los Arquetipos De Los Visitantes** 
 
 Carguemos nuestro dataset relacionado con las respuestas recolectadas.
 
@@ -277,9 +277,11 @@ knitr::kable(reps)
 c(16, 47, 20)
 ```
 
-#### **La Popularidad Y La Tasa De Servicio De Las Atracciones**
+#### **La Popularidad, Duración Y La Tasa De Servicio De Las Atracciones**
 
 Ya saliendo de las encuestas, pasamos a nuestro valores definidos ya como tal. Partamos por las tasas de servicio de las atracciones con las que estaremos trabajando. De manera oficial, no existen como tal registros de las tasas de servicio para ninguna de las atracciones dentro de los parques de Disney, por este motivo, se tuvo que recurrir a estimaciones realizadas por los visitantes del parque. Una de estas fuentes, [wdwthemeparks.com](https://wdwthemeparks.com/hourly-capacity-numbers/), nos presenta con una gran mayoría de los tiempos de espera para los algunos de los parque de atracciones de Disney. 
+
+De manera similar, tenemos que definir el tiempo de duración de las atracciones. Estos tiempos definen tanto el periodo de inactividad de los visitantes como el de las atracciones. De igual manera, al no poder tomar datos directamente de los parques a trabajar, se emplearon reportes de diferentes visitantes al parque publicados en internet. En este caso, se están usando los valores reportados por [touringplans.com](https://touringplans.com/animal-kingdom/attractions/duration#).
 
 Para el desarrollo de este ejercicio, se tomará como referencia el parque de Animal Kingdom, esto principalmente a que es el parque con los datos más completos dentro todos los que se tienen disponibles. Siendo así, en la simulación se trabajarán con las siguientes atracciones:
 
@@ -293,14 +295,42 @@ service_rates <- c(
   "1800", "1800-2060", "1280-1440", "1800-2000",
   "3000", "1080-1440", "800-900"
 )
+duration <- c(
+  4, 4, 6, 10, 20, 5, 2
+)
 
-knitr::kable(cbind(attractions, service_rates))
+knitr::kable(cbind(attractions, service_rates, duration))
 ```
 
+Ahora, en cuanto a la popularidad de cada una de las atracciones, se calculó un valor aproximado de esta definido a partir de la multiplicación de 2 factores. El primero de estos, es la misma tasa de servicio definida en el punto anterior y el segundo de estos es el tiempo de espera mensual promedio reportado por algunos de los servicios como lo son [thrill-data.com](https://www.thrill-data.com/waits/park/wdw/animal-kingdom/). A partir de esto tendremos un estimado del verdadero interés de una atracción en especial al tener en cuenta tanto que tanto hay que esperar en promedio para la atracción, lo que refleja el interés de los visitantes, y la tasa de servicio lo cual evita tiene en cuenta el como se relacionan estos tiempos de espera con la velocidad con la que se atienden a las personas.
+
+Siendo así, para cada uno de las atracciones, estos serían los datos con los que estaríamos trabajando.
+
+```{r, echo=FALSE}
+reported_wait_times <- c(
+  33, 26, 98, 29, 48, 70, 15
+)
+
+popularity <- c(
+  33 * 1800, 26 * 1800, 98 * 1280, 29 * 1800, 48 * 3000, 70 * 1080, 15 * 800
+)
+
+knitr::kable(cbind(attractions, service_rates, duration, reported_wait_times, popularity))
+```
+
+En el momento de realizar la elección de que atracción será para la cual hará fila, se calcula el porcentaje de popularidad que representa el términos generales cada una de las atracciones.
+
 ### **Implementación De La Simulación**
+
+Para el desarrollo del prototipo para la simulación, esta se 
 
 ### **Simulando El Parque**
 
 ### **Análisis De Los Resultados**
 
 ## **Conclusiones**
+
+
+## **Referencias**
+
+- https://touringplans.com/animal-kingdom/attractions/duration#

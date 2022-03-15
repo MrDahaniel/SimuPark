@@ -248,3 +248,23 @@ class SalitrePerson(Person):
             if attraction.queue.wait_time < self.max_wait:
                 self.time_left_in_activity = -1
                 self.join_queue(attraction, "NORMAL")
+
+
+class FakeTimesPerson(Person):
+    def __init__(
+        self,
+        id: int,
+        arrival_time: int,
+        archetype: Archetype,
+        park_closing_time: int = None,
+    ) -> None:
+        super().__init__(id, arrival_time, archetype, park_closing_time)
+
+    def check_attraction(self, attraction: Attraction):
+        # This is the vanilla case, we just need to check if the wait time
+        # is less than the max wait time.
+        # This also can be used if the person doesn't have a turboPass
+        # in the Salitre FP scenario.
+        if attraction.queue.fake_wait_time < self.max_wait:
+            self.time_left_in_activity = -1
+            attraction.add_to_queue(self, "NORMAL")
