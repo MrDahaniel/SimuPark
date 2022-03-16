@@ -80,8 +80,6 @@ Para poder realizar el modelado de las diferentes componentes del parque de dive
 
 La principal necesidad de determinar la función que describa el comportamiento de la entrada de las personas al parque, está en el como este afecta los tiempos de espera de manera general dentro del parque.
 
-!!!! Expandir esto, me quedé sin ideas. Me estaba doliendo la cabeza !!!!
-
 Lo primero a realizar es cargar nuestro dataset. Como tal, este dataset fue recolectado de diferentes páginas web las cuales indicaban una especie de nivel de "llenura". Aunque se han de reconocer las limitaciones de la información que verdaramente provee, debido a la escacez de los datos que hay sobre las tasas de entrada en muchos de los parques, es lo más cercano que se tiene a un reporte de la manera en la que las personas visitan el parque.
 
 ```{r}
